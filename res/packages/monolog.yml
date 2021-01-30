@@ -1,0 +1,39 @@
+monolog:
+  handlers:
+    error_mailer:
+      type: service
+      id: Eventum\Monolog\MailHandler
+    doctrine:
+      type: stream
+      path: "%kernel.logs_dir%/%kernel.environment%.doctrine.log"
+      channels: ["doctrine"]
+    deprecation:
+      type: stream
+      path: "%kernel.logs_dir%/%kernel.environment%.deprecations.log"
+    deprecation_filter:
+      type: filter
+      handler: deprecation
+      max_level: info
+      channels: ["php"]
+
+services:
+  Eventum\Monolog\AppInfoProcessor:
+    tags:
+      - { name: monolog.processor }
+  Monolog\Processor\WebProcessor:
+    tags:
+      - { name: monolog.processor }
+  Monolog\Processor\MemoryUsageProcessor:
+    tags:
+      - { name: monolog.processor }
+  Monolog\Processor\MemoryPeakUsageProcessor:
+    tags:
+      - { name: monolog.processor }
+  Monolog\Processor\PsrLogMessageProcessor:
+    tags:
+      - { name: monolog.processor }
+  Monolog\Processor\IntrospectionProcessor:
+    tags:
+      - { name: monolog.processor }
+
+# vim:ts=2:sw=2:et

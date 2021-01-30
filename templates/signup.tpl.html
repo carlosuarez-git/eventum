@@ -1,0 +1,87 @@
+{extends "base.tpl.html"}
+{block title}{t}Account Signup{/t}{/block}
+
+{block "content"}
+{if $core.app_setup.open_signup != 'enabled'}
+<center>
+<span>
+{t}Sorry, but this feature has been disabled by the administrator.{/t}
+<br /><br />
+<a href="javascript:history.go(-1);">{t}Go Back{/t}</a>
+</span>
+</center>
+{else}
+
+<script type="text/javascript">
+<!--
+function validateForm()
+{
+    if (Validation.isFieldWhitespace('full_name')) {
+        alert('{t escape=js}Please enter your full name.{/t}');
+        Validation.selectField('full_name');
+        return false;
+    }
+    if (Validation.isFieldWhitespace('email')) {
+        alert('{t escape=js}Please enter your email address.{/t}');
+        Validation.selectField('email');
+        return false;
+    }
+    if (!Validation.isEmail(Eventum.getField('email').val())) {
+        alert('{t escape=js}Please enter a valid email address.{/t}');
+        Validation.selectField('email');
+        return false;
+    }
+    if (Validation.isFieldWhitespace('passwd')) {
+        alert('{t escape=js}Please enter your password.{/t}');
+        Validation.selectField('passwd');
+        return false;
+    }
+    return true;
+}
+$().ready(function() {
+    $('#signup_form').submit(validateForm);
+});
+//-->
+</script>
+
+<form id="signup_form" method="post" action="signup.php">
+<input type="hidden" name="cat" value="signup">
+      <table class="bordered medium">
+        <tr class="title">
+          <th colspan="2">
+            {t}Account Signup{/t}
+          </th>
+        </tr>
+        {if $signup_result|default:'' != 1}
+        <tr>
+          <th>{t}Full Name{/t}</th>
+          <td width="75%">
+            <input type="text" name="full_name" size="50" maxlength="255">
+            {include file="error_icon.tpl.html" field="full_name"}
+          </td>
+        </tr>
+        <tr>
+          <th>{t}Email Address{/t}</th>
+          <td width="75%">
+            <input type="text" name="email" size="50" maxlength="255">
+            {include file="error_icon.tpl.html" field="email"}
+          </td>
+        </tr>
+        <tr>
+          <th>{t}Password{/t}</th>
+          <td width="75%">
+            <input type="password" name="passwd" size="20" maxlength="32" autocomplete="off">
+            {include file="error_icon.tpl.html" field="passwd"}
+          </td>
+        </tr>
+        <tr class="buttons">
+          <td colspan="2">
+            <input type="submit" value="{t}Create Account{/t}">
+              <div class="right"><a href="index.php">{t}Back to Login Form{/t}</a></div>
+          </td>
+        </tr>
+        {/if}
+      </table>
+</form>
+{/if}
+{/block}

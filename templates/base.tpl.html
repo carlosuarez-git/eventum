@@ -1,0 +1,96 @@
+{*
+    blocks:
+        title
+        sidebar
+        content
+    variables:
+        extra_title: If set, this will override the contents of the title block
+*}
+{capture assign="title"}{block name="title"}{$extra_title|default:""}{/block}{/capture}
+<!DOCTYPE html>
+<html>
+<head data-rel-url="{$core.rel_url}">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=8" />
+  <link rel="shortcut icon" href="{$core.rel_url}favicon.ico" type="image/x-icon" />
+  <link rel="search" type="application/opensearchdescription+xml" href="{$core.rel_url}opensearch.php" title="{t}Eventum Issues search{/t}" />
+  <title>{if $title != '' or isset($extra_title)}{$extra_title|default:$title} - {/if}{$core.app_setup.tool_caption|default:$core.app_title}</title>
+  <script type="text/javascript">
+  <!--
+  var issue = {
+{if isset($issue.iss_id)}
+    id: {$issue.iss_id},
+{/if}
+    _: 0
+  };
+  var project = {
+{if isset($core.project_id)}
+    id: {$core.project_id},
+    name: {$core.project_name|json_encode},
+{/if}
+    _: 0
+  };
+  var user_prefs = {
+{if isset($core.user)}
+    relative_date: {$core.current_user_prefs.relative_date},
+    week_firstday: {$core.current_user_prefs.week_firstday}
+{/if}
+  };
+  //-->
+  </script>
+
+  <link rel="stylesheet" type="text/css" media="screen" href="{asset path='css/components.css'}">
+  <link rel="stylesheet" type="text/css" media="screen" href="{asset path='css/jquery-ui.css'}">
+  <link rel="stylesheet" type="text/css" media="screen" href="{asset path='css/app.css'}">
+
+  {* allow pages to inject to <head> block *}
+  {block "stylesheets"}
+  {/block}
+  {* local directory can add overrides *}
+  {$userstyle}
+
+  <script type="text/javascript" src="{asset path='js/components.js'}"></script>
+  <script type="text/javascript" src="{asset path='js/jquery-ui.js'}"></script>
+  <script type="text/javascript" src="{asset path='js/app.js'}"></script>
+
+  {* allow pages to inject to <head> block *}
+  {block "javascripts"}
+  {/block}
+  {block "javascripts2"}
+  {/block}
+  {$debugbar_head|default:''}
+  {* local directory can add overrides *}
+  {$userscript}
+
+  {* local directory can add overrides *}
+  {include file="extra_header.tpl.html"}
+
+  {foreach from=$header_templates item=template}
+    {include file="$template.tpl.html"}
+  {/foreach}
+</head>
+<!--[if lt IE 7 ]> <body class="ie6 {block page_classes}{/block}" id="{$core.template_id}"> <![endif]-->
+<!--[if IE 7 ]> <body class="ie7 {block page_classes}{/block}" id="{$core.template_id}"> <![endif]-->
+<!--[if IE 8 ]> <body class="ie8 {block page_classes}{/block}" id="{$core.template_id}"> <![endif]-->
+<!--[if !IE]>--> <body class="{block page_classes}{/block}" id="{$core.template_id}"><!--<![endif]-->
+<div id="container">
+    {block "header"}{/block}
+
+    <div id="full_width_messages">
+    {block "messages"}
+        {include "app_messages.tpl.html"}
+    {/block}
+    </div>
+
+    <div id="middle">
+        <div id="content">
+        {block name="content"}{/block}
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    {block "footer"}{/block}
+    {$debugbar_body|default:''}
+</div>
+</body>
+</html>

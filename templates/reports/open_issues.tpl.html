@@ -1,0 +1,57 @@
+{extends "reports/reports_base.tpl.html"}
+{block "title"}{t}Open Issues By User{/t}{/block}
+
+{block "report_content"}
+<br />
+<form method="get">
+<input type="hidden" name="group_by_reporter" value="{$group_by_reporter}">
+      <table class="bordered">
+        <tr>
+          <td colspan="3">
+            <b>{t}Showing all open issues older than {/t}{$cutoff_days} {t}days{/t}.</b>
+          </td>
+        </tr>
+        <tr>
+          <td width="120">
+            <b>{t}Number of Days{/t}:</b>
+          </td>
+          <td width="100">
+            <input type="text" size="5" name="cutoff_days" value="{$cutoff_days}">
+          </td>
+          <td>
+            <input type="submit" value="{t}Submit{/t}" class="shortcut">
+          </td>
+        </tr>
+      </table>
+</form>
+
+{foreach key=user_full_name item=assigned_issues from=$users}
+<h4>{$user_full_name|escape:"html"} ({$assigned_issues|@count})</h4>
+      <table class="bordered">
+        <tr>
+          <th rowspan="2" align="center">{t}Issue ID{/t}</th>
+          <th rowspan="2" align="center">{t}Summary{/t}</th>
+          <th rowspan="2" align="center">{t}Status{/t}</th>
+          <th rowspan="2" align="center">{t}Time Spent{/t}</th>
+          <th rowspan="2" align="center">{t}Created{/t}</th>
+          <th colspan="2" align="center">{t}Days and Hours Since{/t}</th>
+        </tr>
+        <tr>
+          <td align="center">{t}Last Update{/t}</td>
+          <td align="center">{t}Last Outgoing Msg{/t}</td>
+        </tr>
+        {foreach key=issue_id item=issue from=$assigned_issues}
+        <tr>
+          <td bgcolor="{$issue.status_color}" align="center"><a target="_top" href="{$core.rel_url}view.php?id={$issue_id}" title="{t}view issue details{/t}">{$issue_id}</a></td>
+          <td bgcolor="{$issue.status_color}"><a target="_top" href="{$core.rel_url}view.php?id={$issue_id}" title="{t}view issue details{/t}">{$issue.iss_summary|escape:"html"}</a></td>
+          <td bgcolor="{$issue.status_color}" align="center">{$issue.sta_title|escape:"html"}</td>
+          <td bgcolor="{$issue.status_color}" align="center">{$issue.time_spent}</td>
+          <td bgcolor="{$issue.status_color}" align="center">{$issue.iss_created_date|timeago}</td>
+          <td bgcolor="{$issue.status_color}" align="center">{$issue.last_update}</td>
+          <td bgcolor="{$issue.status_color}" align="center">{$issue.last_email_response}</td>
+        </tr>
+        {/foreach}
+      </table>
+<br />
+{/foreach}
+{/block}

@@ -1,0 +1,110 @@
+<script type="text/javascript">
+
+// Disable auto discover for all elements:
+Dropzone.autoDiscover = {empty($smarty.get.legacy)|intval};
+
+// "reportForm" is the camelized version of the HTML element's ID
+Dropzone.options.{$form} = {
+  // The name that will be used to transfer the file
+  paramName: "{$param}[]",
+
+  url: "{$core.rel_url}ajax/upload.php?file={$param}",
+
+  // In MB
+  maxFilesize: {$max_attachment_bytes / 1024 / 1024},
+
+  previewTemplate:
+  '<li class="dz-file-preview">' +
+  '<div class="dz-details">' +
+    '<div class="dz-filename">' +
+      '<span data-dz-name></span> ' +
+      '(<span data-dz-size></span>) ' +
+      '<span>[ <a class="dz-remove" href="javascript:undefined" data-dz-remove>remove</a></span> ] ' +
+      '<span class="dz-status"></span>' +
+    '</div>' +
+  '</div>' +
+  '<div class="dz-error-message"><span data-dz-errormessage></span></div> ' +
+  '</li>',
+
+  previewsContainer: '.dropzone-previews',
+
+  init: function() {
+    var $iaf_ids = $('#iaf_ids');
+    var iaf_ids = {
+      // add id to iaf_ids list
+      add: function(id) {
+        var current = $iaf_ids.val();
+        var ids = current ? current.split(/,/) : [];
+        $iaf_ids.val(ids.concat(id).join(','));
+      },
+
+      // remove id to iaf_ids list
+      remove: function (id) {
+        if (id == undefined) {
+            return;
+        }
+        var current = $iaf_ids.val();
+        var ids = current ? current.split(/,/) : [];
+        // NOTE:  id needs to be string, not int
+        var index = $.inArray(id + "", ids);
+
+        // sanity check to avoid removing last item
+        if (index == -1) {
+          alert('Attachment File Id ' + id + ' not found');
+          return;
+        }
+
+        ids.splice(index, 1);
+        $iaf_ids.val(ids.join(','));
+      }
+    };
+
+    this.on("success", function(file, data) {
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      if (!data.iaf_id) {
+        alert('File not uploaded!');
+        return;
+      }
+
+      // add uploaded id to list (it's an array actually)
+
+      iaf_ids.add(data.iaf_id);
+      // store value for remove action
+      file.iaf_id = data.iaf_id[0];
+
+      $(file.previewElement).find('.dz-status').html('Upload Complete');
+    });
+
+    this.on("sending", function(file, xhr, formData) {
+      // Will send the filesize along with the file as POST data.
+      formData.append("filesize", file.size);
+      $(file.previewElement).find('.dz-status')
+        .html('Uploading... <i class="fa fa-spinner fa-pulse fa-1x fa-fw"></i>');
+    });
+
+    this.on("removedfile", function(file) {
+      console.log(file);
+      iaf_ids.remove(file.iaf_id);
+    });
+  }
+};
+
+// setup paste from clipboard
+$(function () {
+  FileReaderJS.setupClipboard(document.body, {
+    on: {
+      load: function (e, file) {
+        var dropzone = Dropzone.forElement("form#{$form}");
+        dropzone.addFile(file);
+      },
+      error: function (e, file) {
+        console.error(e, file);
+      }
+    }
+  });
+});
+</script>

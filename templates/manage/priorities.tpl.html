@@ -1,0 +1,178 @@
+{extends "manage/manage.tpl.html"}
+
+{function name="rank_icon" direction="down" href=""}
+  {include file="include/rank_icon.tpl.html" direction=$direction href=$href}
+{/function}
+
+{block "manage_content"}
+
+<script type="text/javascript">
+    <!--
+    function checkDelete()
+    {
+        if (!Validation.hasOneChecked('items[]')) {
+            alert('{t escape=js}Please select at least one of the priorities.{/t}');
+            return false;
+        }
+        if (!confirm('{t escape=js}This action will remove the selected entries.{/t}')) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    function validateForm()
+    {
+        if (Validation.isFieldWhitespace('title')) {
+            Validation.selectField('title');
+            alert('{t escape=js}Please enter the title of this priority{/t}');
+            return false;
+        }
+        if (Validation.isFieldWhitespace('rank')) {
+            Validation.selectField('rank');
+            alert('{t escape=js}Please enter the rank of this priority{/t}');
+            return false;
+        }
+        return true;
+    }
+    $().ready(function() {
+        $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+        $('#delete_form').submit(checkDelete);
+        $('#priority_form').submit(validateForm);
+    });
+    //-->
+
+	// Selectmenu – select icon of priority
+	$(function() {
+		$.widget( "custom.iconselectmenu", $.ui.selectmenu, {
+			_renderItem: function( $ul, item ) {
+				var $li = $( "<li>", { text: item.label } );
+				if ( item.disabled ) {
+					$li.addClass( "ui-state-disabled" );
+				}
+				$( "<span>", {
+					style: item.element.attr( "data-style" ),
+					"class": "ui-icon " + item.element.attr( "data-class" )
+				})
+					.appendTo( $li );
+				return $li.appendTo( $ul );
+			}
+		});
+
+		$( "#select_menu_priority_icon" )
+			.iconselectmenu()
+			.iconselectmenu( "menuWidget")
+				.addClass( "ui-menu-icons select_icon_priority" );
+	});
+</script>
+
+<form id="priority_form" method="post">
+    <input type="hidden" name="prj_id" value="{$project.prj_id}">
+    {if $smarty.get.cat|default:'' == 'edit'}
+    <input type="hidden" name="cat" value="update">
+    <input type="hidden" name="id" value="{$smarty.get.id|intval}">
+    {else}
+    <input type="hidden" name="cat" value="new">
+    {/if}
+    <table class="bordered">
+        <tr class="title">
+            <th colspan="2">
+                {t}Manage Priorities{/t}
+                <div class="right">
+                    ({t}Current Project{/t}: {$project.prj_title})
+                </div>
+            </th>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Title{/t}: *
+            </th>
+            <td>
+                <input type="text" name="title" size="40" value="{$info.pri_title|default:''}">
+                {include file="error_icon.tpl.html" field="title"}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Rank{/t}: *
+            </th>
+            <td>
+                <input type="text" name="rank" size="5" value="{$info.pri_rank|default:''}">
+                {include file="error_icon.tpl.html" field="rank"}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Icon{/t}:
+            </th>
+            <td>
+              <select name="icon" id="select_menu_priority_icon">
+                <option data-class="select_icon_priority" value="0" {if isset($info.pri_icon) && $info.pri_icon == 0}selected{/if}>none</option>
+                  {section name=i start=1 loop=22 step=1}
+                  <option data-class="select_icon_priority" data-style="background-image:url({$core.rel_url}images/priority/{$smarty.section.i.index}.png);" value="{$smarty.section.i.index}" {if isset($info.pri_icon) && $info.pri_icon == $smarty.section.i.index}selected{/if}>{$smarty.section.i.index}</option>
+                  {/section}
+              </select>
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                {if $smarty.get.cat|default:'' == 'edit'}
+                <input type="submit" value="{t}Update Priority{/t}">
+                {else}
+                <input type="submit" value="{t}Create Priority{/t}">
+                {/if}
+                <input type="reset" value="{t}Reset{/t}">
+            </td>
+        </tr>
+    </table>
+</form>
+
+<form id="delete_form" method="post">
+    <input type="hidden" name="prj_id" value="{$project.prj_id}">
+    <input type="hidden" name="cat" value="delete">
+    <table class="bordered">
+        <tr class="title">
+            <th colspan="3">
+                {t}Existing Priorities{/t}:
+            </th>
+        </tr>
+        <tr>
+            <th width="4" nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+            <th align="center">&nbsp;{t}Rank{/t}&nbsp;</th>
+            <th align="center">&nbsp;{t}Icon{/t}&nbsp;</th>
+            <th width="100%">&nbsp;{t}Title{/t}</th>
+        </tr>
+        {section name="i" loop=$list}
+        <tr class="{cycle values='odd,even'}">
+            <td width="4" nowrap align="center"><input type="checkbox" name="items[]" value="{$list[i].pri_id}"></td>
+            <td align="center" nowrap>
+              {rank_icon href="{$core.rel_url}manage/priorities.php?cat=change_rank&id={$list[i].pri_id}&prj_id={$project.prj_id}&rank=desc" direction="down"}
+              {$list[i].pri_rank}
+              {rank_icon href="{$core.rel_url}manage/priorities.php?cat=change_rank&id={$list[i].pri_id}&prj_id={$project.prj_id}&rank=asc" direction="up"}
+            </td>
+            <td align="center" nowrap>
+                {if $list[i].pri_icon > 0}<span class="priority_icon priority-icon-{$list[i].pri_icon}" title="{$list[i].pri_icon}"></span>{/if}
+            </td>
+            <td width="100%">
+                &nbsp;<a href="{$core.rel_url}manage/priorities.php?cat=edit&id={$list[i].pri_id}&prj_id={$project.prj_id}" title="{t}update this entry{/t}">{$list[i].pri_title}</a>
+            </td>
+        </tr>
+        {sectionelse}
+        <tr>
+            <td colspan="4" align="center">
+                {t}No priorities could be found.{/t}
+            </td>
+        </tr>
+        {/section}
+        <tr class="buttons">
+            <td width="4" align="center">
+                <input type="button" value="{t}All{/t}" class="select_all">
+            </td>
+            <td colspan="3">
+                <input type="submit" value="{t}Delete{/t}">
+            </td>
+        </tr>
+    </table>
+</form>
+</table>
+{/block}

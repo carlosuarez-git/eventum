@@ -1,0 +1,78 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+<form name="partner_form"  method="post">
+    {if $smarty.get.cat|default:'' == 'edit'}
+    <input type="hidden" name="cat" value="update">
+    <input type="hidden" name="code" value="{$smarty.get.code|escape}">
+    {/if}
+    <table class="bordered">
+        <tr class="title">
+            <th colspan="2">
+                {t}Manage Partners{/t}
+            </th>
+        </tr>
+        {if $smarty.get.cat|default:'' == 'edit' && isset($info)}
+        <tr>
+            <th width="120">
+                {t}Code{/t}
+            </th>
+            <td>
+                {$info.code}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Name{/t}
+            </th>
+            <td>
+                {$info.name}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                <nobr>{t}Projects{/t} *</nobr>
+            </th>
+            <td>
+                <select name="projects[]" multiple="multiple">
+                    {html_options options=$project_list selected=$info.projects|@array_keys}
+                </select>
+                {include file="error_icon.tpl.html" field="rank"}
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                <input type="submit" name="submit" value="Update" class="button" />
+            </td>
+        </tr>
+        {/if}
+    </table>
+</form>
+
+<table class="bordered grid">
+    <tr class="title">
+        <th>{t}Code{/t}</th>
+        <th>{t}Name{/t}</th>
+        <th>{t}Projects{/t}</th>
+    </tr>
+    {foreach from=$list item=partner}
+    <tr class="{cycle values='odd,even'}">
+        <td width="20%">
+            &nbsp;<a href="partners.php?cat=edit&code={$partner.code}">{$partner.code}</a>
+        </td>
+        <td width="40%">
+            &nbsp;{$partner.name}
+        </td>
+        <td width="20%">
+            &nbsp;{","|join:$partner.projects}
+        </td>
+    </tr>
+    {foreachelse}
+    <tr>
+        <td colspan="5" align="center">
+            <i>{t}No partners found.{/t}</i>
+        </td>
+    </tr>
+    {/foreach}
+</table>
+{/block}

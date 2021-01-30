@@ -1,0 +1,150 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+<script type="text/javascript">
+    <!--
+    function validateForm()
+    {
+        if (Eventum.getField('anonymous_post').first().is(':checked')) {
+            if (!Validation.hasOneChecked('options[show_custom_fields]')) {
+                alert('{t escape=js}Please choose whether to show custom fields for remote invocations or not.{/t}');
+                Validation.selectField('options[show_custom_fields]');
+                return false;
+            }
+            if (Eventum.getField('options[reporter]').val() == '-1') {
+                alert('{t escape=js}Please choose the reporter for remote invocations.{/t}');
+                Validation.selectField('options[reporter]');
+                return false;
+            }
+            if (Eventum.getField('options[category]').val() == '-1') {
+                alert('{t escape=js}Please choose the default category for remote invocations.{/t}');
+                Validation.selectField('options[category]');
+                return false;
+            }
+            if (Eventum.getField('options[priority]').val() == '-1') {
+                alert('{t escape=js}Please choose the default priority for remote invocations.{/t}');
+                Validation.selectField('options[priority]');
+                return false;
+            }
+
+                }
+                return true;
+            }
+            function toggleDisableFields()
+            {
+                var bool = !Eventum.getField('anonymous_post').first().is(':checked');
+                var bgcolor;
+                if (bool) {
+                    bgcolor = '#CCCCCC';
+                } else {
+                    bgcolor = '#FFFFFF';
+                }
+                $('#anon_form select').
+                        add(Eventum.getField('options[show_custom_fields]')).
+                        attr('disabled', bool).
+                        css('backgroundColor', bgcolor);
+            }
+
+            $().ready(function() {
+                $('#anon_form').submit(validateForm);
+                toggleDisableFields();
+                Eventum.getField('anonymous_post').change(toggleDisableFields);
+            });
+    //-->
+</script>
+
+<form id="anon_form" method="post">
+    <input type="hidden" name="cat" value="update">
+    <input type="hidden" name="prj_id" value="{$prj_id}">
+    <table class="bordered">
+        <tr class="title">
+            <th colspan="2">
+                {t}Anonymous Reporting of New Issues{/t}
+                <div class="right">({t}Current Project{/t}: {$project.prj_title})</div>
+            </th>
+        </tr>
+        <tr>
+            <th width="130" nowrap>
+                {t}Anonymous Reporting{/t}: *
+            </th>
+            <td width="80%">
+                <label>
+                    <input type="radio" name="anonymous_post" value="enabled" {if $project.prj_anonymous_post == 'enabled'}checked{/if}>
+                    {t}Enabled{/t}</label>
+                <label>
+                    <input type="radio" name="anonymous_post" value="disabled" {if $project.prj_anonymous_post != 'enabled'}checked{/if}>
+                    {t}Disabled{/t}</label>
+            </td>
+        </tr>
+        <tr>
+            <th width="130" nowrap>
+                {t}Show Custom Fields ?{/t} *
+            </th>
+            <td width="80%">
+                <label>
+                    <input type="radio" name="options[show_custom_fields]" value="yes" {if $options.show_custom_fields == 'yes'}checked{/if}>
+                    {t}Enabled{/t}</label>
+                <label>
+                    <input type="radio" name="options[show_custom_fields]" value="no" {if $options.show_custom_fields != 'yes'}checked{/if}>
+                    {t}Disabled{/t}</label>
+            </td>
+        </tr>
+        <tr>
+            <th width="130">
+                {t}Reporter{/t}: *
+            </th>
+            <td>
+                <select name="options[reporter]" tabindex="1">
+                    <option value="-1">{t}Please choose an user{/t}</option>
+                    {html_options options=$users selected=$options.reporter}
+                </select>
+                {include file="error_icon.tpl.html" field="options[reporter]"}
+            </td>
+        </tr>
+        <tr>
+            <th width="130">
+                {t}Default Category{/t}: *
+            </th>
+            <td>
+                <select name="options[category]" tabindex="2">
+                    <option value="-1">{t}Please choose a category{/t}</option>
+                    {html_options options=$cats selected=$options.category}
+                </select>
+                {include file="error_icon.tpl.html" field="options[category]"}
+            </td>
+        </tr>
+        <tr>
+            <th width="130">
+                {t}Default Priority{/t}: *
+            </th>
+            <td>
+                <select name="options[priority]" tabindex="3">
+                    <option value="-1">{t}Please choose a priority{/t}</option>
+                    {section name="i" loop=$priorities}
+                    <option value="{$priorities[i].pri_id}" {if $priorities[i].pri_id == $options.priority}selected{/if}>{$priorities[i].pri_title}</option>
+                    {/section}
+                </select>
+                {include file="error_icon.tpl.html" field="options[priority]"}
+            </td>
+        </tr>
+        <tr>
+            <th width="150">
+                {t}Assignment{/t}:
+            </th>
+            <td>
+                <select name="options[users][]" multiple size="3" tabindex="4">
+                    {html_options options=$users selected=$options.users|default:''}
+                </select>
+                {include file="error_icon.tpl.html" field="options[users][]"}
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                <input type="submit" value="{t}Update Setup{/t}">
+                <input type="reset" value="{t}Reset{/t}">
+            </td>
+        </tr>
+    </table>
+</form>
+{/block}

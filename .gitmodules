@@ -1,0 +1,3 @@
+[submodule "contrib/shell-semver"]
+	path = contrib/shell-semver
+	url = https://github.com/fmahnke/shell-semver

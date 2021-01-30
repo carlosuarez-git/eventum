@@ -1,0 +1,153 @@
+{extends "base_full.tpl.html"}
+{block title}{t 1=$issue_id 2=$escalation_id}Escalate #%1 on Issue #%1{/t}{/block}
+
+{block "content"}
+
+{if $show_temp_form == 'yes'}
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<br /><br />&nbsp;
+<form method="post">
+<input type="hidden" name="form_name" value="{$smarty.get.form_name}">
+<input type="hidden" name="field_name" value="{$smarty.get.field_name}">
+<textarea rows="0" cols="0" name="textarea"></textarea>
+</form>
+<script type="text/javascript">
+<!--
+var textarea = window.opener.document.{$smarty.get.form_name}.{$smarty.get.field_name};
+document.forms[0].textarea.value = textarea.value;
+document.forms[0].submit();
+//-->
+</script>
+{else}
+
+<script type="text/javascript">
+<!--
+function fixSpelling()
+{
+
+    var f = document.forms[0];
+    var old_value = f.misspelled_words.options[f.misspelled_words.selectedIndex].text;
+    var new_value = f.suggestion.options[f.suggestion.selectedIndex].text;
+
+    if (new_value == '') {
+        return;
+    }
+
+    var textarea = window.opener.document.{$smarty.post.form_name}.{$smarty.post.field_name};
+    textarea.value = replaceWords(textarea.value, old_value, new_value);
+
+}
+function buildSuggestionBox()
+{
+
+    var suggestions = [];
+    {foreach key=word item=suggestions from=$spell_check.suggestions}
+    suggestions.push(new Option("{$word}", "{section name=i loop=$suggestions}{$suggestions[i]}{if not $smarty.section.i.last},{/if}{/section}"));
+    {/foreach}
+
+    var f = document.forms[0];
+    var word = f.misspelled_words.options[f.misspelled_words.selectedIndex].text;
+    var _suggestions = '';
+    for (var i = 0; i < suggestions.length; i++) {
+        if (suggestions[i].text == word) {
+            _suggestions = suggestions[i].value;
+            break;
+        }
+    }
+    f.suggestion.length = 0;
+    _suggestions = _suggestions.split(',');
+    for (var i = 0; i < _suggestions.length; i++) {
+        f.suggestion.options[f.suggestion.options.length] = new Option(_suggestions[i], _suggestions[i]);
+    }
+}
+//-->
+</script>
+
+<form>
+<table align="center" width="100%" cellpadding="3">
+  <tr>
+    <td>
+      <table width="100%" cellspacing="1" cellpadding="2" border="0">
+        <tr>
+          <td colspan="2">
+            <b>{t}Spell Check{/t}</b>
+          </td>
+        </tr>
+        {if $spell_check.total_words == 0}
+        <tr>
+          <td align="center">
+            <b>{t}No spelling mistakes could be found.{/t}</b>
+          </td>
+        </tr>
+        {else}
+        <tr>
+          <td width="130">
+            <b>{t}Misspelled Words{/t}:</b>
+          </td>
+          <td width="60%">
+            <select name="misspelled_words" onChange="buildSuggestionBox();">
+            {html_options options=$spell_check.words}
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td width="130">
+            <b>{t}Suggestions{/t}:</b>
+          </td>
+          <td width="60%">
+            <select name="suggestion">
+              <option>{t}Choose a misspelled word{/t}</option>
+            </select>
+          </td>
+        </tr>
+        {/if}
+        <tr>
+          <td colspan="2" align="center">
+            {if $spell_check.total_words > 0}<input type="button" value="{t}Fix Spelling{/t}" onClick="fixSpelling();">&nbsp;&nbsp;{/if}
+            <input type="button" value="Close" onClick="window.close();">
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</form>
+{if $spell_check.total_words > 0}
+<script type="text/javascript">
+<!--
+buildSuggestionBox();
+//-->
+</script>
+{/if}
+{/if}
+{/block}

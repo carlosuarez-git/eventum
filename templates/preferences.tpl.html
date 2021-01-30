@@ -1,0 +1,20 @@
+{extends "base_full.tpl.html"}
+{block "title"}{t}Preferences{/t}{/block}
+
+{block "content"}
+
+{include file="preferences/update_name_form.tpl.html"}
+{include file="preferences/update_email_form.tpl.html"}
+{include file="preferences/update_sms_form.tpl.html"}
+{include file="preferences/update_password_form.tpl.html"}
+{include file="preferences/account_prefs_form.tpl.html"}
+
+{if $permissions.update_project}
+    {include file="preferences/project_prefs_form.tpl.html"}
+{/if}
+
+{if $permissions.regenerate_token}
+    {include file="preferences/api_token_form.tpl.html"}
+{/if}
+
+{/block}

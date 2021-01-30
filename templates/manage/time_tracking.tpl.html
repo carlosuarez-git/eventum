@@ -1,0 +1,115 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+  <script type="text/javascript">
+  <!--
+  function validateForm()
+  {
+      if (Validation.isFieldWhitespace('title')) {
+          alert('{t escape=js}Please enter the title of this time tracking category{/t}');
+          Validation.selectField('title');
+          return false;
+      }
+      return true;
+  }
+
+  function checkDelete()
+  {
+      if (!Validation.hasOneChecked('items[]')) {
+          alert('{t escape=js}Please select at least one of the time tracking categories.{/t}');
+          return false;
+      }
+      if (!confirm('{t escape=js}This action will remove the selected entries.{/t}')) {
+          return false;
+      } else {
+          return true;
+      }
+  }
+
+
+  $().ready(function() {
+      $('#time_tracking_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+      $('#delete_group').submit(checkDelete);
+  });
+  //-->
+  </script>
+
+          <form id="time_tracking_form" method="post">
+          <input type="hidden" name="prj_id" value="{$project.prj_id}">
+          {if $smarty.get.cat|default:'' == 'edit'}
+          <input type="hidden" name="cat" value="update">
+          <input type="hidden" name="id" value="{$smarty.get.id|intval|default:''}">
+          {else}
+          <input type="hidden" name="cat" value="new">
+          {/if}
+
+        <table class="bordered">
+          <tr class="title">
+            <th colspan="2">
+              {t}Manage Time Tracking Categories{/t}
+            </th>
+          </tr>
+          <tr>
+            <th width="120">
+              {t}Title{/t}
+            </th>
+            <td>
+              <input type="text" name="title" size="40" value="{$info.ttc_title|default:''}">
+              {include file="error_icon.tpl.html" field="title"}
+            </td>
+          </tr>
+          <tr class="buttons">
+            <td colspan="2">
+              {if $smarty.get.cat|default:'' == 'edit'}
+              <input type="submit" value="{t}Update Category{/t}">
+              {else}
+              <input type="submit" value="{t}Create Category{/t}">
+              {/if}
+              <input type="reset" value="{t}Reset{/t}">
+            </td>
+          </tr>
+        </table>
+        </form>
+
+        <form id="delete_group" method="post">
+          <input type="hidden" name="prj_id" value="{$project.prj_id}">
+        <input type="hidden" name="cat" value="delete">
+        <table class="bordered grid">
+          <tr class="title">
+            <th colspan="2">
+              {t}Existing Categories{/t}
+            </th>
+          </tr>
+          <tr>
+              <th width="4" nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+              <th width="100%">&nbsp;{t}Title{/t}</th>
+            </tr>
+            {section name="i" loop=$list}
+            <tr class="{cycle values='odd,even'}">
+              <td width="4" nowrap align="center"><input type="checkbox" name="items[]" value="{$list[i].ttc_id}"></td>
+              <td width="100%">
+                &nbsp;<a href="{$core.rel_url}manage/time_tracking.php?prj_id={$project.prj_id}&cat=edit&id={$list[i].ttc_id}" title="{t}update this entry{/t}">{$list[i].ttc_title}</a>
+              </td>
+            </tr>
+            {sectionelse}
+            <tr class="no_results">
+              <td colspan="2">
+                {t}No time tracking categories could be found.{/t}
+              </td>
+            </tr>
+            {/section}
+            <tr class="buttons">
+              <td width="4">
+                <input type="button" value="{t}All{/t}" class="select_all">
+              </td>
+              <td>
+                <input type="submit" value="{t}Delete{/t}">
+              </td>
+            </tr>
+          </table>
+          </form>
+          <span>{t}Note{/t}:  {t}'Note Discussion', 'Email Discussion' and 'Telephone Discussion' categories are required by Eventum and cannot be deleted.{/t}</span>
+{/block}

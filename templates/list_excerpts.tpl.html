@@ -1,0 +1,43 @@
+{*
+list excerpts
+
+used by block in list.tpl.html
+
+*}
+<ul class="excerpts">
+  {if $list[i].excerpts.issue.summary|default:''}
+    {* TRANSLATORS: %1: excerpt issue summary *}
+    <li>{t escape=no 1=$list[i].excerpts.issue.summary}Summary: %1{/t}</li>
+  {/if}
+  {if $list[i].excerpts.issue.description|default:''}
+    {* TRANSLATORS: %1: excerpt issue description *}
+    <li>{t escape=no 1=$list[i].excerpts.issue.description}Description: %1{/t}</li>
+  {/if}
+  {if $list[i].excerpts.email|default:''}
+    <li>{t}Emails{/t}:
+      <ul class="emails">
+      {foreach from=$list[i].excerpts.email item=highlight key=email_num}
+        <li value="{$email_num}">#{$email_num}: {$highlight}</li>
+      {/foreach}
+      </ul>
+    </li>
+  {/if}
+  {if $list[i].excerpts.phone|default:'' and $core.current_role != $core.roles.customer}
+    <li>{t}Phone Calls{/t}:
+      <ul class="phone">
+      {foreach from=$list[i].excerpts.phone item=highlight}
+        <li>{$highlight}</li>
+      {/foreach}
+      </ul>
+    </li>
+  {/if}
+  {if $list[i].excerpts.note|default:'' and $core.current_role != $core.roles.customer}
+    <li>{t}Notes{/t}:
+      <ul class="notes">
+      {foreach from=$list[i].excerpts.note item=highlight key=note_num}
+        <li value="{$note_num}">#{$note_num}: {$highlight}</li>
+      {/foreach}
+      </ul>
+    </li>
+  {/if}
+</ul>

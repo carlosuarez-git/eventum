@@ -1,0 +1,150 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+<script type="text/javascript">
+<!--
+var url = '{$core.rel_url}manage/customer_notes.php';
+var cno_id = {$smarty.get.id|intval|default:''};
+
+function populateCustomerComboBox()
+{
+  if (cno_id == '') {
+      url += '?prj_id=' + Eventum.getField('project').val();
+  } else {
+      url += '?cat=edit&id=' + cno_id + '&prj_id=' + Eventum.getField('project').val();
+  }
+  window.location.href = url;
+}
+function validateForm()
+{
+  if (Eventum.getField('customer').val() == '') {
+      alert('{t escape=js}Please choose the customer for this new note.{/t}');
+      Validation.selectField('customer');
+      return false;
+  }
+  return true;
+}
+function checkDelete()
+{
+  if (!Validation.hasOneChecked('items[]')) {
+      alert('{t escape=js}Please select at least one of the notes.{/t}');
+      return false;
+  }
+  if (!confirm('{t escape=js}This action will permanently remove the selected entries.{/t}')) {
+      return false;
+  } else {
+      return true;
+  }
+}
+  $().ready(function() {
+      $('#release_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+      $('select[name=project]').change(populateCustomerComboBox);
+
+      $('#delete_form').submit(checkDelete);
+  });
+//-->
+</script>
+
+<form name="release_form" onSubmit="return validateForm(this);" method="post">
+{if $smarty.get.cat|default:'' == 'edit'}
+<input type="hidden" name="cat" value="update">
+<input type="hidden" name="id" value="{$smarty.get.id|intval|default:''}">
+{else}
+<input type="hidden" name="cat" value="new">
+{/if}
+        <table class="bordered">
+          <tr class="title">
+            <th colspan="2">
+              {t}Manage Customer Quick Notes{/t}
+            </th>
+          </tr>
+          <tr>
+            <th width="120">
+              {t}Project{/t}
+            </th>
+            <td>
+              <select name="project">
+                <option value="-1">{t}Please choose an option{/t}</option>
+                {html_options options=$project_list selected=$info.cno_prj_id|default:''}
+              </select>
+              {include file="error_icon.tpl.html" field="project"}
+            </td>
+          </tr>
+          <tr>
+            <th width="120">
+              {t}Customer{/t}
+            </th>
+            <td>
+            <select name="customer">
+                <option value="">{t}Please choose a customer{/t}</option>
+                {if $customers|default:'' != ''}
+                    {html_options options=$customers selected=$info.cno_customer_id|default:''}
+                {/if}
+            </select>
+            {include file="error_icon.tpl.html" field="customer"}
+            </td>
+          </tr>
+          <tr>
+            <th width="120">
+              {t}Note{/t}
+            </th>
+            <td>
+              <textarea name="note" cols="40" rows="5">{$info.cno_note|default:''}</textarea>
+            </td>
+          </tr>
+          <tr class="buttons">
+            <td colspan="2">
+              {if $smarty.get.cat|default:'' == 'edit'}
+              <input type="submit" value="{t}Update Note{/t}">
+              {else}
+              <input type="submit" value="{t}Create Note{/t}">
+              {/if}
+              <input type="reset" value="{t}Reset{/t}">
+            </td>
+          </tr>
+        </table>
+        </form>
+
+        <form onSubmit="return checkDelete(this);" method="post">
+        <input type="hidden" name="cat" value="delete">
+        <table class="bordered grid">
+          <tr class="title">
+            <th colspan="3">
+              {t}Existing Customer Quick Notes{/t}
+            </th>
+          </tr>
+        <tr>
+          <th nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+          <th width="50%">&nbsp;{t}Customer{/t}</th>
+          <th width="50%">&nbsp;{t}Note{/t}</th>
+        </tr>
+        {section name="i" loop=$list}
+        <tr class="{cycle values='odd,even'}">
+          <td nowrap align="center"><input type="checkbox" name="items[]" value="{$list[i].cno_id}"></td>
+          <td>
+            <a href="{$core.rel_url}manage/customer_notes.php?cat=edit&id={$list[i].cno_id}">{$list[i].customer_title|default:''|escape:"html"}</a>
+          </td>
+          <td>
+            {$list[i].cno_note|escape:"html"|nl2br}
+          </td>
+        </tr>
+        {sectionelse}
+        <tr class="no_results">
+          <td colspan="4" >
+            {t}No notes could be found.{/t}
+          </td>
+        </tr>
+        {/section}
+        <tr class="buttons">
+          <td>
+            <input type="button" value="{t}All{/t}" class="select_all">
+          </td>
+          <td colspan="3">
+            <input type="submit" value="{t}Delete{/t}">
+          </td>
+        </tr>
+  </table>
+  </form>
+{/block}

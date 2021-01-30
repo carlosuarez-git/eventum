@@ -1,0 +1,17 @@
+<tr>
+  <td width="120">
+    <b>{t}Assignee{/t}:</b>
+  </td>
+  <td>
+      <script type="text/javascript">
+        $().ready(function() {
+            $('#clear_selected').click(function() { Eventum.clearSelectedOptions('issue_field[assignee][]'); });
+            Eventum.setupShowSelections(Eventum.getField('issue_field[assignee][]'));
+        });
+      </script>
+    <select id="issue_field_assignee" size="4" multiple name="issue_field[assignee][]">
+      {html_options options=$issue_field.options selected=$issue_field.value}
+    </select><input type="button" value="{t}Clear Selections{/t}" id="clear_selected"><br />
+    <div id="selection_issue_field_assignee">{if $issue.assignments|default:'' != ''}{t}Current Selections{/t}: {$issue.assignments}{/if}</div>
+  </td>
+</tr>

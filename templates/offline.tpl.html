@@ -1,0 +1,39 @@
+{extends "base.tpl.html"}
+{block "title"}Offline{/block}
+
+{block "content"}
+
+<br />
+<br />
+
+<table width="400" bgcolor="#003366" border="0" cellspacing="0" cellpadding="1" align="center">
+  <tr>
+    <td>
+      <table bgcolor="#FFFFFF" width="100%" cellspacing="1" cellpadding="2" border="0">
+        <tr>
+          <td width="100%">
+            <span id="error-header">
+              <i class="fa fa-warning" aria-hidden="true"></i>
+              {t}Database Error{/t}:
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <br />
+            <b>
+            {if $error_type == 'db'}
+            {t}There seems to be a problem connecting to the database server specified in your configuration file. Please contact your local system administrator for further assistance.{/t}
+            {elseif $error_type == 'table'}
+            {t}There seems to be a problem finding the required database tables in the database server specified in your configuration file. Please contact your local system administrator for further assistance.{/t}
+            {/if}
+            </b>
+            <br />
+            <br />
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+{/block}

@@ -1,0 +1,51 @@
+{
+  "private": true,
+  "scripts": {
+    "assets:development": "yarn run webpack:development --hide-modules --progress",
+    "assets:production": "yarn run webpack:production --hide-modules --no-progress",
+    "dev": "yarn run assets:development",
+    "hot": "yarn run webpack-dev-server:development --inline --hot",
+    "prod": "yarn run assets:production",
+    "watch": "yarn run assets:development --watch",
+    "watch-poll": "yarn run assets:watch --watch-poll",
+    "webpack-dev-server:development": "cross-env NODE_ENV=development webpack-dev-server --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "webpack:development": "cross-env NODE_ENV=development webpack --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "webpack:production": "cross-env NODE_ENV=production webpack --config=node_modules/laravel-mix/setup/webpack.config.js"
+  },
+  "engines": {
+    "node": "^8.10.0||^10"
+  },
+  "devDependencies": {
+    "autosize": "3.0.13",
+    "block-ui": "^2.70.1",
+    "chosen-js": "^1.8.7",
+    "cross-env": "^5.2.1",
+    "datatables": "^1.10.18",
+    "drmonty-garlicjs": "^1.2.3",
+    "dropzone": "^4.3.0",
+    "file-reader-wrapper": "^0.9.10",
+    "font-awesome": "^4.7.0",
+    "jquery": "1.9.x",
+    "jquery-form": "^4.3.0",
+    "jquery-ui": "^1.12.1",
+    "js-cookie": "^2.2.1",
+    "laravel-mix": "^5.0.5",
+    "mermaid": "^8.8.3",
+    "raven-js": "^3.27.2",
+    "resolve-url-loader": "^3.1.1",
+    "sass": "^1.26.10",
+    "sass-loader": "^8.0.2",
+    "timeago": "^1.6.7",
+    "vue-template-compiler": "^2.6.12"
+  },
+  "resolutions": {
+    "block-ui/jquery": "1.9.x",
+    "datatables/jquery": "1.9.x",
+    "drmonty-garlicjs/jquery": "1.9.x",
+    "jquery-form/jquery": "1.9.x",
+    "timeago/jquery": "1.9.x"
+  },
+  "dependencies": {
+    "cmd-ctrl-enter": "github:widernet/cmd-ctrl-enter#8843088cd312a97ef0abb64de1fe83e02c915b5c"
+  }
+}

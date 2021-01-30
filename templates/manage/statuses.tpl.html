@@ -1,0 +1,195 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+  <script type="text/javascript">
+  <!--
+  function validateForm()
+  {
+      if (Validation.isFieldWhitespace('title')) {
+          alert('{t escape=js}Please enter the title of this status.{/t}');
+          Validation.selectField('title');
+          return false;
+      }
+      if (Validation.isFieldWhitespace('abbreviation')) {
+          alert('{t escape=js}Please enter the abbreviation of this status.{/t}');
+          Validation.selectField('abbreviation');
+          return false;
+      }
+      if (Validation.isFieldWhitespace('rank')) {
+          alert('{t escape=js}Please enter the rank of this status.{/t}');
+          Validation.selectField('rank');
+          return false;
+      }
+      if (!Validation.hasOneSelected('projects[]')) {
+          alert('{t escape=js}Please assign the appropriate projects for this status.{/t}');
+          Validation.selectField('projects[]');
+          return false;
+      }
+      if (Validation.isFieldWhitespace('color')) {
+          alert('{t escape=js}Please enter the color of this status.{/t}');
+          Validation.selectField('color');
+          return false;
+      }
+      if (!Validation.isFieldRGBhex('color')) {
+        alert('{t escape=js}Color needs to be valid RGB hex value.{/t}');
+        Validation.selectField('color');
+        return false;
+      }
+      return true;
+  }
+
+  function checkDelete()
+  {
+      if (!Validation.hasOneChecked('items[]')) {
+          alert('{t escape=js}Please select at least one of the statuses.{/t}');
+          return false;
+      }
+      if (!confirm("{t escape=js}This action will remove the selected entries. This will also update any issues currently set to this status to a new status 'undefined'.{/t}")) {
+          return false;
+      } else {
+          return true;
+      }
+  }
+  $().ready(function() {
+      $('#status_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+      $('#delete_form').submit(checkDelete);
+  });
+  //-->
+  </script>
+
+  <form id="status_form" method="post">
+  {if $smarty.get.cat|default:'' == 'edit'}
+  <input type="hidden" name="cat" value="update">
+  <input type="hidden" name="id" value="{$smarty.get.id|intval}">
+  {else}
+  <input type="hidden" name="cat" value="new">
+  {/if}
+            <table class="bordered">
+              <tr class="title">
+                <th colspan="2">
+                  {t}Manage Statuses{/t}
+                </th>
+              </tr>
+              <tr>
+                <th width="140">
+                  {t}Title{/t}
+                </th>
+                <td>
+                  <input type="text" name="title" size="40" value="{$info.sta_title|default:''|escape:"html"}">
+                  {include file="error_icon.tpl.html" field="title"}
+                </td>
+              </tr>
+              <tr>
+                <th width="140">
+                  {t}Abbreviation{/t}
+                </th>
+                <td>
+                  <input type="text" name="abbreviation" size="5" value="{$info.sta_abbreviation|default:''}" maxlength="3">
+                  {include file="error_icon.tpl.html" field="abbreviation"}
+                  <span>{t}(three letter abbreviation){/t}</span>
+                </td>
+              </tr>
+              <tr>
+                <th width="140">
+                  {t}Rank{/t}
+                </th>
+                <td>
+                  <input type="text" name="rank" size="5" value="{$info.sta_rank|default:''}">
+                  {include file="error_icon.tpl.html" field="rank"}
+                </td>
+              </tr>
+              <tr>
+                <th width="140">
+                  {t}Closed Context ?{/t}
+                </th>
+                <td>
+                  <label><input type="radio" name="is_closed" value="1" {if $info.sta_is_closed|default:'' == '1'}checked{/if}> {t}Yes{/t}</label>
+                  <label><input type="radio" name="is_closed" value="0" {if $info.sta_is_closed|default:'' != '1'}checked{/if}> {t}No{/t}</label>
+                </td>
+              </tr>
+              <tr>
+                <th width="140">
+                  <nobr>{t}Assigned Projects{/t}</nobr>
+                </th>
+                <td>
+                  <select name="projects[]" multiple size="3">
+                  {html_options options=$project_list selected=$info.projects|default:''}
+                  </select>
+                  {include file="error_icon.tpl.html" field="projects[]"}
+                </td>
+              </tr>
+              <tr>
+                <th width="140">
+                  {t}Color{/t}
+                </th>
+                <td>
+                  <input type="text" name="color" size="10" value="{$info.sta_color|default:''}">
+                  {include file="error_icon.tpl.html" field="color"}
+                  <span>{t}(RGB hex. This color will be used in the issue listing page and graphical stats){/t}</span>
+                </td>
+              </tr>
+              <tr class="buttons">
+                <td colspan="2" align="center">
+                  {if $smarty.get.cat|default:'' == 'edit'}
+                  <input type="submit" value="{t}Update Status{/t}">
+                  {else}
+                  <input type="submit" value="{t}Create Status{/t}">
+                  {/if}
+                  <input type="reset" value="{t}Reset{/t}">
+                </td>
+              </tr>
+            </table>
+          </form>
+
+        <form id="delete_form" method="post">
+        <input type="hidden" name="cat" value="delete">
+          <table class="bordered grid">
+              <tr class="title">
+                <th colspan="6">
+                  {t}Existing Statuses{/t}
+                </th>
+              </tr>
+            <tr>
+              <th nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+              <th>&nbsp;{t}Rank{/t}&nbsp;</th>
+              <th>&nbsp;{t}Abbreviation{/t}&nbsp;</th>
+              <th width="40%">&nbsp;{t}Title{/t}</th>
+              <th width="30%">&nbsp;{t}Projects{/t}</th>
+              <th width="30%">&nbsp;{t}Color{/t}</th>
+            </tr>
+            {section name="i" loop=$list}
+            <tr class="{cycle values='odd,even'}">
+              <td width="4" nowrap align="center"><input type="checkbox" name="items[]" value="{$list[i].sta_id}"></td>
+              <td align="center">{$list[i].sta_rank}</td>
+              <td align="center">{$list[i].sta_abbreviation}</td>
+              <td width="40%">
+                &nbsp;<a href="{$core.rel_url}manage/statuses.php?cat=edit&id={$list[i].sta_id}" title="{t}update this entry{/t}">{$list[i].sta_title}</a>
+              </td>
+              <td width="30%">
+                &nbsp;{$list[i].projects|escape:"html"}
+              </td>
+              <td width="30%" bgcolor="{$list[i].sta_color}">
+                &nbsp;{$list[i].sta_color}
+              </td>
+            </tr>
+            {sectionelse}
+            <tr class="no_results">
+              <td colspan="6">
+                {t}No statuses could be found.{/t}
+              </td>
+            </tr>
+            {/section}
+            <tr class="buttons">
+              <td>
+                <input type="button" value="{t}All{/t}" class="select_all">
+              </td>
+              <td colspan="5">
+                <input type="submit" value="{t}Delete{/t}">
+              </td>
+            </tr>
+          </table>
+        </form>
+{/block}

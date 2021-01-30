@@ -1,0 +1,8 @@
+{extends "base.tpl.html"}
+{block title}{t}Associate Email{/t}{/block}
+
+{block content}
+<div class="note_box">
+{t 1=$core.app_setup.tool_caption|default:$core.app_title|escape:"html"}%1 has been PURPOSELY TAKEN OFFLINE for maintenance. Please check back later.{/t}
+</div>
+{/block}

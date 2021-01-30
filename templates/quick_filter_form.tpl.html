@@ -1,0 +1,210 @@
+<div id="quick_filter" class="bordered" {get_display_style element_name='quick_filter'}>
+<form id="quick_filter_form" action="list.php" method="get">
+    <table width="100%">
+        <input type="hidden" name="cat" value="search">
+        <input type="hidden" name="pagerRow" value="0">
+        <input type="hidden" name="created_date[Year]" value="{$options.created_date.Year|default:''}">
+        <input type="hidden" name="created_date[Month]" value="{$options.created_date.Month|default:''}">
+        <input type="hidden" name="created_date[Day]" value="{$options.created_date.Day|default:''}">
+        <input type="hidden" name="created_date[filter_type]" value="{$options.created_date.filter_type|default:''}">
+        <input type="hidden" name="updated_date[Year]" value="{$options.updated_date.Year|default:''}">
+        <input type="hidden" name="updated_date[Month]" value="{$options.updated_date.Month|default:''}">
+        <input type="hidden" name="updated_date[Day]" value="{$options.updated_date.Day|default:''}">
+        <input type="hidden" name="updated_date[filter_type]" value="{$options.updated_date.filter_type|default:''}">
+        <input type="hidden" name="last_response_date[Year]" value="{$options.last_response_date.Year|default:''}">
+        <input type="hidden" name="last_response_date[Month]" value="{$options.last_response_date.Month|default:''}">
+        <input type="hidden" name="last_response_date[Day]" value="{$options.last_response_date.Day|default:''}">
+        <input type="hidden" name="last_response_date[filter_type]" value="{$options.last_response_date.filter_type|default:''}">
+        <input type="hidden" name="first_response_date[Year]" value="{$options.first_response_date.Year|default:''}">
+        <input type="hidden" name="first_response_date[Month]" value="{$options.first_response_date.Month|default:''}">
+        <input type="hidden" name="first_response_date[Day]" value="{$options.first_response_date.Day|default:''}">
+        <input type="hidden" name="first_response_date[filter_type]" value="{$options.first_response_date.filter_type|default:''}">
+        <input type="hidden" name="closed_date[Year]" value="{$options.closed_date.Year|default:''}">
+        <input type="hidden" name="closed_date[Month]" value="{$options.closed_date.Month|default:''}">
+        <input type="hidden" name="closed_date[Day]" value="{$options.closed_date.Day|default:''}">
+        <input type="hidden" name="closed_date[filter_type]" value="{$options.closed_date.filter_type|default:''}">
+        <input type="hidden" name="show_authorized_issues" value="{$options.show_authorized_issues|default:''}">
+        <input type="hidden" name="show_notification_list_issues" value="{$options.show_notification_list_issues|default:''}">
+        <input type="hidden" name="custom_field" value="{$options.custom_field|@serialize|urlencode}">
+        {foreach from=$options.reporter item=reporter}
+        <input type="hidden" name="reporter[]" value="{$reporter}">
+        {/foreach}
+        <input type="hidden" name="customer_id" value="{$options.customer_id|default:''}">
+        {foreach from=$options.product item=product}
+        <input type="hidden" name="product[]" value="{$product}">
+        {/foreach}
+        {if $categories|@count < 1}
+        <input type="hidden" name="category[]" value="">
+        {/if}
+        {if $severities|@count < 1}
+        <input type="hidden" name="severity[]" value="">
+        {/if}
+        {if $priorities|@count < 1}
+        <input type="hidden" name="priority[]" value="">
+        {/if}
+        {foreach from=$options.release item=release}
+        <input type="hidden" name="release[]" value="{$release}">
+        {/foreach}
+        {if $core.current_role == $core.roles.customer}
+        <input type="hidden" name="users[]" value="">
+        {/if}
+        {foreach from=$options.users item=user}
+        <input type="hidden" name="last_users[]" value="{$user}">
+        {/foreach}
+        {foreach from=$options.category item=category}
+        <input type="hidden" name="last_category[]" value="{$category}">
+        {/foreach}
+        {foreach from=$options.priority item=priority}
+        <input type="hidden" name="last_priority[]" value="{$priority}">
+        {/foreach}
+        {foreach from=$options.severity item=severity}
+        <input type="hidden" name="last_severity[]" value="{$severity}">
+        {/foreach}
+        {foreach from=$options.status item=status}
+        <input type="hidden" name="last_status[]" value="{$status}">
+        {/foreach}
+        <tr>
+            <td nowrap>
+                <span>{t}Keyword(s){/t}:</span><br />
+                <input type="text" name="keywords" size="40" value="{$options.keywords|default:''|escape:"html"}">
+                <div id="ft_options">
+                    {if $match_modes}
+                    <div>
+                        <span>{t}Match Mode{/t}:</span><br />
+                        <select name="match_mode">
+                            {html_options options=$match_modes selected=$options.match_mode}
+                        </select>
+                        &nbsp;&nbsp;
+                    </div>
+                    {/if}
+                    {if $supports_excerpts}
+                    <div>
+                        <span>{t}Excerpts{/t}:</span><br />
+                        <label><input type="radio" name="hide_excerpts" value="0"
+                            {if $options.hide_excerpts == 0}CHECKED{/if} />
+                            {t}Show{/t}</label>
+                        <label><input type="radio" name="hide_excerpts" value="1"
+                            {if $options.hide_excerpts == 1}CHECKED{/if} />
+                            {t}Hide{/t}</label>
+                    </div>
+                    {/if}
+                </div>
+            </td>
+            <td nowrap colspan="{if $categories|@count > 0}4{else}3{/if}">
+                {if $core.has_crm and $core.current_role != $core.roles.customer}
+                <div style="float: left; margin-right: 1em;">
+                    <input type="radio" name="search_type" value="customer" id="search_type_customer" {if $options.search_type != 'all_text'}checked{/if}> <label for="search_type_customer">{t}Customer Identity (e.g. "Example Inc.", "johndoe@example.com", 12345){/t}</label><br />
+                    <input type="radio" name="search_type" value="all_text" id="search_type_all_text" {if $options.search_type == 'all_text'}checked{/if}> <label for="search_type_all_text">{t}All Text (emails, notes, etc){/t}</label>
+                </div>
+                {else}
+                <input type="hidden" name="search_type" value="all_text" id="search_type">
+                {/if}
+            </td>
+            <td rowspan="2" align="center" width="100">
+                <input type="submit" value="{t}Search{/t}"><br /><br />
+                <input type="button" value="{t}Clear Filters{/t}" id="clear_filters">
+            </td>
+        </tr>
+        <tr>
+            {if $core.current_role != $core.roles.customer}
+            <td valign="top">
+                <span>{t}Assigned{/t}:</span><br />
+                <select name="users" class="chosen-select">
+                    {if $options.users|@count > 1}
+                    <option value="last" selected>{t}multiple selections{/t}</option>
+                    {html_options options=$assign_options}
+                    {else}
+                    {html_options options=$assign_options selected=$options.users}
+                    {/if}
+                </select>
+            </td>
+            {/if}
+            {if $categories|@count > 0}
+            <td valign="top">
+                <span>{t}Category{/t}:</span><br />
+                <select name="category" class="chosen-select" style="width: 150px">
+                    {if $options.category|@count > 1}
+                    <option value="last" selected>{t}multiple selections{/t}</option>
+                    <option value="">{t}any{/t}</option>
+                    {html_options options=$categories}
+                    {else}
+                    <option value="" {if $options.category[0] == ""}selected{/if}>{t}any{/t}</option>
+                    {html_options options=$categories selected=$options.category}
+                    {/if}
+                </select>
+            </td>
+            {/if}
+            {if $priorities|@count > 0}
+            <td valign="top">
+                <span>{t}Priority{/t}:</span><br />
+                <select name="priority" class="chosen-select" style="width: 150px">
+                    {if $options.priority|@count > 1}
+                    <option value="last" selected>{t}multiple selections{/t}</option>
+                    <option value="">{t}any{/t}</option>
+                    {html_options options=$priorities}
+                    {else}
+                    <option value="" {if $options.priority[0] == ""}selected{/if}>{t}any{/t}</option>
+                    {html_options options=$priorities selected=$options.priority}
+                    {/if}
+                </select>
+            </td>
+            {/if}
+            {if $severities|@count > 0}
+            <td valign="top">
+                <span>{t}Severity{/t}:</span><br />
+                <select name="severity" class="chosen-select" style="width: 150px">
+                    {if $options.severity|@count > 1}
+                    <option value="last" selected>{t}multiple selections{/t}</option>
+                    <option value="">{t}any{/t}</option>
+                    {html_options options=$severities}
+                    {else}
+                    <option value="" {if $options.severity[0] == ""}selected{/if}>{t}any{/t}</option>
+                    {html_options options=$severities selected=$options.severity}
+                    {/if}
+                </select>
+            </td>
+            {/if}
+            <td valign="top">
+                <span>{t}Status{/t}:</span><br />
+                <select name="status" class="chosen-select" style="width: 150px">
+                    {if $options.status|@count > 1}
+                    <option value="last" selected>{t}multiple selections{/t}</option>
+                    <option value="">{t}any{/t}</option>
+                    {html_options options=$status}
+                    {else}
+                    <option value="" {if $options.status[0] == ""}selected{/if}>{t}any{/t}</option>
+                    {html_options options=$status selected=$options.status}
+                    {/if}
+                </select>
+            </td>
+        </tr>
+    </table>
+</form>
+{if $core.current_role > $core.roles.reporter}
+<div class="bottom_bar">
+    <table>
+        <form action="list.php" method="get">
+            <tr>
+                <td>
+                </td>
+                <td align="center">
+                    <a target="_top" title="{t}create advanced searches{/t}" href="{$core.rel_url}adv_search.php">{t}Advanced Search{/t}</a>
+                </td>
+                <td align="right">
+                    <span>{t}Saved Searches{/t}:</span>
+                    <select name="custom_filter" id="custom_filter" class="chosen-select">
+                        <option value="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>
+                        {section name="i" loop=$csts}
+                        <option value="{$csts[i].url}">{$csts[i].cst_title}</option>
+                        {/section}
+                    </select>
+                </td>
+            </tr>
+        </form>
+    </table>
+</div>
+{/if}
+</div>
+
+<br />
+

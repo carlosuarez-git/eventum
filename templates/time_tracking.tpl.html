@@ -1,0 +1,71 @@
+<form name="add_time_form" method="post" action="#" data-delete-warning="{t}This action will permanently delete the specified time tracking entry.{/t}">
+<div class="issue_section bordered internal" id="time_tracking">
+    <div class="title">
+        {t}Time Tracking{/t} ({$time_entries|@count})
+        <span class="menu">
+          [ <a href="#top">{t}Back to Top{/t}</a> ]
+          [ <span class="js_link" id="toggle_time_tracking">{get_display_label element_name="time_tracking" total=$time_entries|@count}</span> ]
+        </span>
+    </div>
+    <div class="content" {get_display_style element_name='time_tracking' total=$time_entries|@count}>
+        <table class="grid internal">
+          <tr>
+            <th width="5">#</th>
+            <th nowrap>{t}Date of Work{/t}</th>
+            <th nowrap>{t}User{/t}</th>
+            <th>{t}Time Spent{/t}</th>
+            <th>{t}Category{/t}</th>
+            <th width="50%">{t}Summary{/t}</th>
+          </tr>
+          {section name="i" loop=$time_entries}
+          <tr class="{cycle values='odd,even'}">
+            <td>{$smarty.section.i.iteration}</td>
+            <td nowrap>{$time_entries[i].ttr_created_date|timeago}</td>
+            <td nowrap>
+              {$time_entries[i].usr_full_name|escape:html}
+              {if $core.user.usr_id == $time_entries[i].ttr_usr_id}[ <a class="delete_time_entry" data-ttr-id="{$time_entries[i].ttr_id}" href="popup.php?cat=delete_time&id={$time_entries[i].ttr_id}">{t}delete{/t}</a> ]{/if}
+            </td>
+            <td>{$time_entries[i].formatted_time}</td>
+            <td nowrap>{$time_entries[i].ttc_title}</td>
+            <td>
+                {if $time_entries[i].ttr_usr_id == $core.current_user_id or $core.current_role >= $core.roles.manager}
+                    {assign var="edit_entry" value=true}
+                {else}
+                    {assign var="edit_entry" value=false}
+                {/if}
+                {if $edit_entry}<a class="edit_time_entry" data-ttr-id="{$time_entries[i].ttr_id}" href="time_tracking.php?ttr_id={$time_entries[i].ttr_id}">{/if}
+                {$time_entries[i].ttr_summary}
+                {if $edit_entry}</a>{/if}
+            </td>
+          </tr>
+          {if $smarty.section.i.last}
+            {if count($total_time_by_user) > 1}
+              {foreach from=$total_time_by_user item=item}
+              <tr class="total_time {cycle values='odd,even'}">
+                <td colspan="3" width="30%">{$item.usr_full_name|escape:html}</td>
+                <td colspan="3" width="70%">{$item.time_spent}</td>
+              </tr>
+              {/foreach}
+            {/if}
+          <tr class="total_time {cycle values='odd,even'}">
+            <td colspan="3" width="30%">{t}Total Time Spent{/t}</td>
+            <td colspan="3" width="70%">{$total_time_spent}</td>
+          </tr>
+          {/if}
+          {sectionelse}
+          <tr class="no_results">
+            <td colspan="6">
+              {t}No time tracking entries could be found.{/t}
+            </td>
+          </tr>
+          {/section}
+        </table>
+    </div>
+    {if $core.current_role > $core.roles.viewer}
+    <div class="buttons">
+        <input type="button" value="{t}Add Time Entry{/t}" class="add_time_entry">
+    </div>
+    {/if}
+</div>
+
+</form>

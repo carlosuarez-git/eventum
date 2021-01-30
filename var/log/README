@@ -1,0 +1,4 @@
+This directory is for various log files.
+
+This directory must be writable for webserver user and the user who runs
+Eventum crons.

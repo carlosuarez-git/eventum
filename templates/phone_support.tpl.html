@@ -1,0 +1,80 @@
+
+<script type="text/javascript">
+<!--
+function deletePhoneEntry(phone_id)
+{
+    if (!confirm('{t escape=js}This action will permanently delete the specified phone support entry.{/t}')) {
+        return false;
+    } else {
+        var features = 'width=420,height=200,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+        var popupWin = window.open('popup.php?cat=delete_phone&id=' + phone_id, '_popup', features);
+        popupWin.focus();
+    }
+}
+function addPhoneCall()
+{
+    var features = 'width=850,height=450,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+
+    var issue_id = {$smarty.get.id|intval};
+    var popupWin = window.open('phone_calls.php?iss_id=' + issue_id, 'phone_calls_' + issue_id, features);
+
+    popupWin.focus();
+}
+//-->
+</script>
+
+<div class="issue_section bordered internal" id="phone_calls">
+    <div class="title">
+        {t}Phone Calls{/t} ({$phone_entries|@count})
+        <span class="menu">
+            [ <a href="#top">{t}Back to Top{/t}</a> ]
+            [ <span id="toggle_phone_calls" class="js_link">{get_display_label element_name="phone_calls" total=$phone_entries|@count}</span> ]
+        </span>
+    </div>
+    <div class="content" {get_display_style element_name='phone_calls' total=$phone_entries|@count}>
+        <table class="grid internal">
+          <tr>
+            <th nowrap>{include file="expandable_cell/buttons.tpl.html" ec_id="phone"}</th>
+            <th width="5" align="center">#</th>
+            <th width="20%" nowrap>{t}Recorded Date{/t}</th>
+            <th width="15%">{t}Entered By{/t}</th>
+            <th width="10%">{t}From{/t}</th>
+            <th width="10%">{t}To{/t}</th>
+            <th width="10%">{t}Call Type{/t}</th>
+            <th width="20%">{t}Category{/t}</th>
+            <th width="20%">{t}Phone Number{/t}</th>
+          </tr>
+          {section name="i" loop=$phone_entries}
+          {cycle values='odd,even' assign="row_class"}
+          <tr class="{$row_class}">
+            <td nowrap>{include file="expandable_cell/buttons.tpl.html" ec_id="phone" list_id=$phone_entries[i].phs_id}</td>
+            <td nowrap>{$smarty.section.i.iteration}</td>
+            <td nowrap>{$phone_entries[i].phs_created_date|timeago}</td>
+            <td>
+                {$phone_entries[i].usr_full_name|escape:html}
+                {if $core.user.usr_id == $phone_entries[i].phs_usr_id}
+                  [ <a href="javascript:void(null);" onClick="deletePhoneEntry({$phone_entries[i].phs_id});">{t}delete{/t}</a> ]
+                {/if}
+            </td>
+            <td>{$phone_entries[i].phs_call_from_lname}, {$phone_entries[i].phs_call_from_fname}</td>
+            <td>{$phone_entries[i].phs_call_to_lname}, {$phone_entries[i].phs_call_to_fname}</td>
+            <td>{$phone_entries[i].phs_type|capitalize}</td>
+            <td nowrap>{$phone_entries[i].phc_title}</td>
+            <td nowrap>{$phone_entries[i].phs_phone_number} ({$phone_entries[i].phs_phone_type})</td>
+          </tr>
+          {include file="expandable_cell/body.tpl.html" ec_id="phone" list_id=$phone_entries[i].phs_id colspan="9" class=$row_class}
+          {sectionelse}
+          <tr class="no_results">
+            <td colspan="9">
+              {t}No phone calls recorded yet.{/t}
+            </td>
+          </tr>
+          {/section}
+        </table>
+    </div>
+    {if $core.current_role > $core.roles.customer}
+    <div class="buttons">
+      <input type="submit" value="{t}Add Phone Call{/t}" onClick="addPhoneCall();">
+    </div>
+    {/if}
+</div>

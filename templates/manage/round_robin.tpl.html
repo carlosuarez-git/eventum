@@ -1,0 +1,157 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+<script type="text/javascript">
+<!--
+var url = '{$core.rel_url}manage/round_robin.php';
+
+function populateUserComboBox()
+{
+  url += '?prj_id=' + Eventum.getField('project').val();
+  window.location.href = url;
+}
+function validateForm()
+{
+  if (!Validation.hasOneSelected('users[]')) {
+      alert('{t escape=js}Please assign the appropriate users for this round robin entry.{/t}');
+      Validation.selectField('users[]');
+      return false;
+  }
+  return true;
+}
+function checkDelete()
+{
+  if (!Validation.hasOneChecked('items[]')) {
+      alert('{t escape=js}Please select at least one of the round robin entries.{/t}');
+      return false;
+  }
+  if (!confirm('{t escape=js}This action will permanently remove the selected round robin entries.{/t}')) {
+      return false;
+  } else {
+      return true;
+  }
+}
+  $().ready(function() {
+      $('#round_robin_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+      $('select[name=project]').change(populateUserComboBox);
+
+      $('#delete_form').submit(checkDelete);
+  });
+//-->
+</script>
+
+<form id="round_robin_form"  method="post">
+{if $smarty.get.cat|default:'' == 'edit'}
+<input type="hidden" name="cat" value="update">
+<input type="hidden" name="id" value="{$smarty.get.id|intval|default:''}">
+{else}
+<input type="hidden" name="cat" value="new">
+{/if}
+<table class="bordered">
+  <tr class="title">
+    <th colspan="2">
+      {t}Manage Round Robin Assignments{/t}
+    </th>
+  </tr>
+  <tr>
+    <th width="140">
+      <nobr>{t}Project{/t}</nobr>
+    </th>
+    <td width="80%">
+      {if $info.prr_prj_id|default:'' != ''}
+        {assign var=project value=$info.prr_prj_id|default:''}
+      {else}
+        {assign var=project value=$smarty.request.prj_id|default:''}
+      {/if}
+      <select name="project">
+      <option value="-1">{t}Please choose an option{/t}</option>
+      {html_options options=$project_list|default:'' selected=$project|default:''}
+      </select>
+      {include file="error_icon.tpl.html" field="project"}
+    </td>
+  </tr>
+  <tr>
+    <th width="140">
+      {t}Assignable Users{/t}
+    </th>
+    <td width="80%">
+      <select name="users[]" multiple size="4">
+        {html_options options=$user_options|default:'' selected=$info.users|default:''}
+      </select>
+      {include file="error_icon.tpl.html" field="users[]"}
+    </td>
+  </tr>
+  <tr>
+    <th width="140">
+      {t}Blackout Time Range{/t}
+    </th>
+    <td width="80%">
+      <table>
+        <tr>
+          <td>{t}Start{/t}:</td>
+          <td>{html_select_time minute_interval=5 time=$info.prr_blackout_start|default:'' field_array="blackout_start" prefix="" display_seconds=false all_extra="class='default'"}</td>
+        </tr>
+        <tr>
+          <td>{t}End{/t}:</td>
+          <td>{html_select_time minute_interval=5 time=$info.prr_blackout_end|default:'' field_array="blackout_end" prefix="" display_seconds=false all_extra="class='default'"}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class="buttons">
+    <td colspan="2">
+      {if $smarty.get.cat|default:'' == 'edit'}
+      <input type="submit" value="{t}Update Round Robin Entry{/t}">
+      {else}
+      <input type="submit" value="{t}Create Round Robin Entry{/t}">
+      {/if}
+      <input type="reset" value="{t}Reset{/t}">
+    </td>
+  </tr>
+</table>
+</form>
+
+
+<form id="delete_form" method="post">
+<input type="hidden" name="cat" value="delete">
+<table class="bordered grid">
+  <tr class="title">
+    <th colspan="2">
+      {t}Existing Round Robin Entries{/t}
+    </th>
+  </tr>
+    <tr>
+      <th width="4" nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+      <th width="30%">&nbsp;{t}Project{/t}</th>
+      <th width="70%">&nbsp;{t}Assignable Users{/t}</th>
+    </tr>
+    {section name="i" loop=$list}
+    <tr class="{cycle values="odd,even"}">
+      <td width="4" nowrap align="center"><input type="checkbox" name="items[]" value="{$list[i].prr_id}"></td>
+      <td width="30%">
+        &nbsp;<a href="{$core.rel_url}manage/round_robin.php?cat=edit&id={$list[i].prr_id}" title="{t}update this entry{/t}">{$list[i].prj_title}</a>
+      </td>
+      <td width="70%">
+        &nbsp;{$list[i].users|escape:"html"}
+      </td>
+    </tr>
+    {sectionelse}
+    <tr>
+      <td colspan="3" align="center">
+        <i>{t}No round robin entries could be found.{/t}</i>
+      </td>
+    </tr>
+    {/section}
+    <tr class="buttons">
+      <td width="4" align="center">
+        <input type="button" value="{t}All{/t}" class="select_all">
+      </td>
+      <td colspan="2">
+        <input type="submit" value="{t}Delete{/t}">
+      </td>
+    </tr>
+  </table>
+</form>
+{/block}

@@ -1,0 +1,180 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+<script type="text/javascript">
+function validateForm()
+{
+    if (Validation.isFieldWhitespace('pattern')) {
+        alert('{t escape=js}Please enter a pattern.{/t}');
+        Validation.selectField('pattern');
+        return false;
+    }
+    if (Validation.isFieldWhitespace('replacement')) {
+        alert('{t escape=js}Please enter a replacement value.{/t}');
+        Validation.selectField('replacement');
+        return false;
+    }
+    if (!Validation.hasOneSelected('projects[]')) {
+        alert('{t escape=js}Please select projects this link filter should be active for.{/t}');
+        Validation.selectField('projects[]');
+        return false;
+    }
+    if (!Validation.hasOneSelected('usr_role')) {
+        alert('{t escape=js}Please select the minimum user role that should be able to see this link filter.{/t}');
+        Validation.selectField('usr_role');
+        return false;
+    }
+    return true;
+}
+
+function checkDelete()
+{
+    if (!Validation.hasOneChecked('items[]')) {
+      alert('{t escape=js}Please select at least one link filter.{/t}');
+      return false;
+    }
+    if (!confirm('{t escape=js}WARNING: This action will remove the selected link filters permanently.{/t}\n{t}Please click OK to confirm.{/t}')) {
+      return false;
+    } else {
+      return true;
+    }
+}
+      $().ready(function() {
+          $('#link_filter_form').submit(validateForm);
+          $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+          $('#delete_form').submit(checkDelete);
+      });
+</script>
+
+<form id="link_filter_form" method="post">
+{if $smarty.get.cat|default:'' == 'edit'}
+<input type="hidden" name="cat" value="update">
+<input type="hidden" name="id" value="{$smarty.get.id|default:''|intval}">
+{else}
+<input type="hidden" name="cat" value="new">
+{/if}
+    <table class="bordered">
+        <tr class="title">
+            <th colspan="2">
+                {t}Manage Link Filters{/t} {include file="help_link.tpl.html" topic="link_filters"}
+            </th>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Pattern{/t} *
+            </th>
+            <td>
+                <input type="text" name="pattern" size="40" value="{$info.lfi_pattern|default:''|escape:"html"}">
+                {include file="error_icon.tpl.html" field="pattern"}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Replacement{/t} *
+            </th>
+            <td width="80%">
+                <input type="text" name="replacement" size="40" value="{$info.lfi_replacement|default:''|escape:"html"}">
+                {include file="error_icon.tpl.html" field="replacement"}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Description{/t}
+            </th>
+            <td>
+                <input type="text" name="description" size="50" value="{$info.lfi_description|default:''|escape:"html"}">
+                {include file="error_icon.tpl.html" field="description"}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                <nobr>{t}Assigned Projects{/t} *</nobr>
+            </th>
+            <td>
+                <select name="projects[]" multiple size="3">
+                    {html_options options=$project_list selected=$info.projects|default:''}
+                </select>
+                {include file="error_icon.tpl.html" field="projects[]"}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Minimum User Role{/t}: *
+            </th>
+            <td width="80%">
+                <select name="usr_role">
+                    {html_options options=$user_roles selected=$info.lfi_usr_role|default:''}
+                </select>
+                {include file="error_icon.tpl.html" field="usr_role"}
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                {if $smarty.get.cat|default:'' == 'edit'}
+                <input type="submit" value="{t}Update Link Filter{/t}">
+                {else}
+                <input type="submit" value="{t}Create Link Filter{/t}">
+                {/if}
+                <input type="reset" value="{t}Reset{/t}">
+            </td>
+        </tr>
+    </table>
+    </form>
+
+        <form id="delete_form" method="post">
+        <table class="bordered grid">
+            <tr class="title">
+                <th colspan="6">
+                    {t}Existing Link Filters{/t}
+                </th>
+            </tr>
+            <tr>
+                <th nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+                <th>&nbsp;{t}Pattern{/t}</th>
+                <th>&nbsp;{t}Replacement{/t}</th>
+                <th>&nbsp;{t}Description{/t}</th>
+                <th>&nbsp;{t}Minimum Role{/t}</th>
+                <th>&nbsp;{t}Projects{/t}</th>
+            </tr>
+            {section name="i" loop=$list}
+            <tr class="{cycle values='odd,even'}">
+                <td width="4" nowrap align="center">
+                    <input type="checkbox" name="items[]" value="{$list[i].lfi_id}" {if $smarty.section.i.total == 0}disabled{/if}>
+                </td>
+                <td width="20%">
+                    &nbsp;<a href="{$core.rel_url}manage/link_filters.php?cat=edit&id={$list[i].lfi_id}" title="{t}update this entry{/t}">{$list[i].lfi_pattern|escape:"html"}</a>
+                </td>
+                <td width="20%">
+                    &nbsp;{$list[i].lfi_replacement|escape:"html"}
+                </td>
+                <td width="20%">
+                    &nbsp;{$list[i].lfi_description}
+                </td>
+                <td width="20%">
+                    &nbsp;{$list[i].min_usr_role_name}
+                </td>
+                <td width="20%">
+                    &nbsp;{", "|join:$list[i].project_names}
+                </td>
+            </tr>
+            {sectionelse}
+            <tr class="no_results">
+                <td colspan="6">
+                    {t}No link filters could be found.{/t}
+                </td>
+            </tr>
+            {/section}
+            <tr class="buttons">
+                <td width="4" align="center">
+                    <input type="button" value="{t}All{/t}" class="select_all">
+                    <input type="hidden" name="cat" value="delete">
+                </td>
+                <td colspan="5">
+                    <input type="submit" value="{t}Delete{/t}">
+                </td>
+            </tr>
+        </table>
+        </form>
+{/block}

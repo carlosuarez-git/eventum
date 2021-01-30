@@ -1,0 +1,76 @@
+language: php
+sudo: required
+dist: xenial
+
+# disable the default submodule logic
+git:
+  submodules: false
+
+services:
+  - mysql
+
+env:
+  - PHPUNIT_EXCLUDE_GROUP=ldap,imap,logger,mail,api,locale,date,crypto,flaky
+
+# https://docs.travis-ci.com/user/languages/php/#choosing-php-versions-to-test-against
+jobs:
+  # NOTE: when adding/removing jobs, update bin/releng/snapshot.sh travis_log job_id
+  include:
+    # TODO: would be nice to have two separate stages, one for build, and other for actually publishing
+    - stage: release
+      name: GitHub Release
+      language:
+        - node_js
+        - php
+      php: "7.2"
+      node_js: "10"
+      script:
+        - node --version
+        - php --version
+        - bin/releng/dist.sh
+
+      # https://docs.travis-ci.com/user/deployment/releases
+      # https://docs.travis-ci.com/user/build-stages/deploy-github-releases/
+      before_deploy:
+        - bin/releng/changelog.sh
+
+      deploy:
+        provider: releases
+        # Create token in https://github.com/settings/tokens and set as env var:
+        # $ travis env set -p GITHUB_API_TOKEN ...
+        # or via https://travis-ci.org/eventum/eventum/settings
+        api_key: $GITHUB_API_TOKEN
+        file_glob: true
+        file:
+          - eventum-*.tar.xz
+        skip_cleanup: true
+        overwrite: true
+        on:
+          repo: eventum/eventum
+          tags: true
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.composer/cache
+    - $HOME/.composer/vendor
+    - cache
+    - vendor
+
+before_install:
+  - bin/releng/configure.sh
+
+install:
+  - composer install --no-interaction --prefer-dist --no-suggest
+  - bin/releng/seed.sh
+
+script:
+  - PATH=vendor/bin:$HOME/.composer/vendor/bin:$PATH
+  - composer test
+
+notifications:
+  irc:
+    channels: "chat.freenode.net#eventum"
+    skip_join: true
+
+# vim:ts=2:sw=2:et

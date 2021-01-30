@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="eventum" basedir="." default="phplint">
+	<property name="name" value="${phing.project.name}"/>
+	<property name="basedir" value="."/>
+	<property name="vendor" value="${basedir}/vendor"/>
+	<property name="delete.verbose" value="false"/>
+
+	<!-- phplint -->
+	<target name="phplint" description="Run PHP Lint.">
+		<echo msg="Checking syntax with PHP lint."/>
+		<phplint haltonfailure="true" cachefile="${basedir}/.phplint.cache">
+			<fileset dir="${basedir}">
+				<include name="**/*.php"/>
+				<exclude name=".idea/**"/>
+				<exclude name="releases/**"/>
+				<exclude name="var/**"/>
+				<exclude name="vendor/laminas/laminas-mail/src/Transport/Null.php"/>
+			</fileset>
+		</phplint>
+	</target>
+
+	<!--
+		clean vendor/ dir from unwanted files that come with composer
+		but are not needed for running eventum
+	-->
+	<target name="clean-dist" description="Clean distribution of unwanted files">
+		<delete verbose="${delete.verbose}" includeemptydirs="true" failonerror="true">
+			<fileset dir="${basedir}/res">
+				<include name="packages/test/**"/>
+			</fileset>
+
+			<fileset dir="${basedir}" defaultexcludes="false">
+				<include name="src/Mail/MailStorage.php"/>
+			</fileset>
+
+			<fileset dir="${basedir}/node_modules" defaultexcludes="false">
+			</fileset>
+
+			<fileset dir="${basedir}/contrib">
+				<include name="git/**"/>
+				<include name="shell-semver/**"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="clean-vendor" description="Clean vendor of unwanted files">
+		<delete verbose="${delete.verbose}" includeemptydirs="true" failonerror="true">
+			<!-- generic files -->
+			<fileset dir="${vendor}" defaultexcludes="false">
+				<include name="**/*.md"/>
+				<include name="**/*.mdown"/>
+				<include name="**/*.plex"/>
+				<include name="**/*.sh"/>
+				<include name="**/*.txt"/>
+				<include name="**/*.y"/>
+				<include name="**/.coveralls.yml"/>
+				<include name="**/.doctrine-project.json"/>
+				<include name="**/.gitattributes"/>
+				<include name="**/.github/**"/>
+				<include name="**/.gitignore"/>
+				<include name="**/.horde.yml"/>
+				<include name="**/.php_cs*"/>
+				<include name="**/.scrutinizer.yml"/>
+				<include name="**/.travis.yml"/>
+				<include name="**/AUTHORS"/>
+				<include name="**/COPYING*"/>
+				<include name="**/ChangeLog*"/>
+				<include name="**/LICENSE*"/>
+				<include name="**/Makefile*"/>
+				<include name="**/NEWS"/>
+				<include name="**/README*"/>
+				<include name="**/UPGRADE*"/>
+				<include name="**/appveyor.yml"/>
+				<include name="**/benchmark.php"/>
+				<include name="**/box.json"/>
+				<include name="**/build.properties"/>
+				<include name="**/build.xml"/>
+				<include name="**/composer.json"/>
+				<include name="**/composer.lock"/>
+				<include name="**/couscous.yml"/>
+				<include name="**/example.php"/>
+				<include name="**/humbug.json*"/>
+				<include name="**/infection.json*"/>
+				<include name="**/package.xml"/>
+				<include name="**/pakefile.php"/>
+				<include name="**/phpbench.json"/>
+				<include name="**/phpcs.xml*"/>
+				<include name="**/phpmd.xml*"/>
+				<include name="**/phpstan.neon"/>
+				<include name="**/phpunit.xml*"/>
+				<include name="**/psalm.xml"/>
+				<include name="**/symfony.lock"/>
+				<include name="**/travis.ini"/>
+				<exclude name="robmorgan/phinx/composer.json"/>
+			</fileset>
+
+			<!-- whole dirs -->
+			<fileset dir="${vendor}">
+				<include name="**/Test/**"/>
+				<include name="**/Tests/**"/>
+				<include name="**/doc/**"/>
+				<include name="**/docs/**"/>
+				<include name="**/test/**"/>
+				<include name="**/tests/**"/>
+				<include name="**/examples/**"/>
+				<include name="**/contrib/**"/>
+				<include name="**/demo/**"/>
+				<include name="**/data/**"/>
+				<include name="**/bin/*"/>
+			</fileset>
+
+			<!-- specific to packages -->
+			<fileset dir="${vendor}/smarty-gettext/smarty-gettext">
+				<include name="tsmarty2c.1"/>
+			</fileset>
+
+			<fileset dir="${vendor}/willdurand/email-reply-parser">
+				<include name="src/autoload.php"/>
+			</fileset>
+
+			<fileset dir="${vendor}/laminas/laminas-config/src">
+				<exclude name="Config.php"/>
+				<exclude name="Exception/**"/>
+			</fileset>
+
+			<fileset dir="${vendor}/laminas/laminas-validator/src">
+				<include name="Barcode*/**"/>
+				<include name="Db/**"/>
+				<include name="File/**"/>
+				<include name="Sitemap/**"/>
+			</fileset>
+
+			<fileset dir="${vendor}/laminas/laminas-mail/src">
+				<!-- NULL is reserved keyword in php 7.0 -->
+				<include name="Transport/Null.php"/>
+			</fileset>
+
+			<fileset dir="${vendor}/monolog/monolog/src">
+				<include name="Monolog/Handler/TestHandler.php"/>
+			</fileset>
+
+			<fileset dir="${vendor}/fonts/liberation">
+				<!-- we need just LiberationSans-Regular.ttf -->
+				<exclude name="LiberationSans-Regular.ttf"/>
+			</fileset>
+
+			<fileset dir="${vendor}/phplot/phplot">
+				<!-- need just phplot.php and maybe rgb.inc.php -->
+				<exclude name="phplot.php"/>
+				<exclude name="rgb.inc.php"/>
+			</fileset>
+
+			<fileset dir="${vendor}/phpxmlrpc/phpxmlrpc">
+				<include name="debugger/*"/>
+				<include name="extras/*"/>
+				<include name="lib/*"/>
+			</fileset>
+
+			<fileset dir="${vendor}/robmorgan/phinx">
+				<include name="app/*"/>
+				<include name="bin/*"/>
+				<include name="phinx.yml"/>
+				<include name="src/Phinx/Db/Adapter/PostgresAdapter.php"/>
+				<include name="src/Phinx/Db/Adapter/SQLiteAdapter.php"/>
+				<include name="src/Phinx/Db/Adapter/SqlServerAdapter.php"/>
+				<include name="src/Phinx/Wrapper/TextWrapper.php"/>
+				<include name="src/composer_autoloader.php"/>
+			</fileset>
+
+			<fileset dir="${vendor}/symfony/event-dispatcher">
+				<include name="Debug/**"/>
+			</fileset>
+
+			<fileset dir="${vendor}/phlib/flysystem-pdo">
+				<include name="schema/**"/>
+			</fileset>
+
+			<fileset dir="${vendor}/mnapoli/silly">
+				<include name="website/**"/>
+			</fileset>
+
+			<fileset dir="${vendor}/doctrine/dbal">
+				<include name="bin/**"/>
+			</fileset>
+
+			<fileset dir="${vendor}/doctrine/dbal/lib/Doctrine/DBAL">
+				<include name="Driver/**DB2*"/>
+				<include name="Driver/**Drizzle**"/>
+				<include name="Driver/**Mysqli**"/>
+				<include name="Driver/**OCI**"/>
+				<include name="Driver/**Oracle**"/>
+				<include name="Driver/**PDOIbm**"/>
+				<include name="Driver/**PDOPgSql**"/>
+				<include name="Driver/**PDOSqlite**"/>
+				<include name="Driver/**PDOSqlsrv**"/>
+				<include name="Driver/**Postgre**"/>
+				<include name="Driver/**SQLAnywhere**"/>
+				<include name="Driver/**SQLServer**"/>
+				<include name="Driver/**SQLite**"/>
+				<include name="Driver/SQLSrv/*"/>
+				<include name="Event/Listeners/Oracle*"/>
+				<include name="Platforms/**DB2**"/>
+				<include name="Platforms/**Drizzle**"/>
+				<include name="Platforms/**MsSQL**"/>
+				<include name="Platforms/**Oracle**"/>
+				<include name="Platforms/**SQLAnywhere**"/>
+				<include name="Platforms/**SQLite**"/>
+				<include name="Platforms/Keywords/DB2*"/>
+				<include name="Platforms/Keywords/Drizzle*"/>
+				<include name="Platforms/Keywords/MsSQL*"/>
+				<include name="Platforms/Keywords/Oracle*"/>
+				<include name="Platforms/Keywords/Postgre*"/>
+				<include name="Platforms/Keywords/SQL*"/>
+				<include name="Platforms/Postgre**"/>
+				<include name="Platforms/SQL*"/>
+				<include name="Platforms/Sql*"/>
+				<include name="Schema/DB2*"/>
+				<include name="Schema/Drizzle*"/>
+				<include name="Schema/Oracle*"/>
+				<include name="Schema/PostgreSql*"/>
+				<include name="Schema/SQLAnywhere*"/>
+				<include name="Schema/SQLServer*"/>
+				<include name="Schema/Sqlite*"/>
+				<include name="Sharding/SQLAzure/**"/>
+			</fileset>
+
+			<fileset dir="${vendor}/doctrine/orm">
+				<include name="**/*.xsd"/>
+			</fileset>
+
+			<fileset dir="${vendor}/defuse/php-encryption">
+				<include name="bin/*"/>
+				<include name="dist/*"/>
+			</fileset>
+		</delete>
+	</target>
+</project>

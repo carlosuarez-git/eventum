@@ -1,0 +1,186 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+<script type="text/javascript">
+function validateForm()
+{
+    if (Validation.isFieldWhitespace('group_name')) {
+        alert('{t escape=js}Please enter the name of this group.{/t}');
+        Validation.selectField('group_name');
+        return false;
+    }
+    if (!Validation.hasOneSelected('projects[]')) {
+        alert('{t escape=js}Please assign the appropriate projects for this group.{/t}');
+        Validation.selectField('projects[]');
+        return false;
+    }
+    if (!Validation.hasOneSelected('users[]')) {
+        alert('{t escape=js}Please assign the appropriate users for this group.{/t}');
+        Validation.selectField('users[]');
+        return false;
+    }
+    if (Validation.isFieldWhitespace('manager')) {
+        alert('{t escape=js}Please assign the manager of this group.{/t}');
+        Validation.selectField('manager');
+        return false;
+    } else {
+        // make sure manager is also in users list
+        Eventum.getField('users[]').find("option[value='" + Eventum.getField('manager').val() + "']")[0].selected = true;
+    }
+    return true;
+}
+
+function checkDelete()
+{
+    if (!Validation.hasOneChecked('items[]')) {
+      alert('{t escape=js}Please select at least one of the groups.{/t}');
+      return false;
+    }
+    if (!confirm('{t escape=js}WARNING: This action will remove the selected groups permanently.{/t}\n{t escape=js}Please click OK to confirm.{/t}')) {
+      return false;
+    } else {
+      return true;
+    }
+}
+
+  $().ready(function() {
+      $('#group_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+      Eventum.setupShowSelections($('#users'));
+
+      $('#delete_group').submit(checkDelete);
+  });
+
+</script>
+
+
+<form id="group_form"  method="post">
+{if $smarty.get.cat|default:'' == 'edit'}
+<input type="hidden" name="cat" value="update">
+<input type="hidden" name="id" value="{$smarty.get.id|intval}">
+{else}
+<input type="hidden" name="cat" value="new">
+{/if}
+<table class="bordered">
+    <tr class="title">
+        <th colspan="2">
+            {t}Manage Groups{/t}
+        </th>
+    </tr>
+    <tr>
+        <th width="120">
+            {t}Name{/t} *
+        </th>
+        <td>
+            <input type="text" name="group_name" size="40" value="{$info.grp_name|default:''}">
+            {include file="error_icon.tpl.html" field="group_name"}
+        </td>
+    </tr>
+    <tr>
+        <th width="120">
+            {t}Description{/t}
+        </th>
+        <td>
+            <input type="text" name="description" size="100" value="{$info.grp_description|default:''}">
+            {include file="error_icon.tpl.html" field="description"}
+        </td>
+    </tr>
+    <tr>
+        <th width="120">
+            <nobr>{t}Assigned Projects{/t} *</nobr>
+        </th>
+        <td>
+            <select name="projects[]" multiple size="3">
+                {html_options options=$project_list selected=$info.project_ids|default:''}
+            </select>
+            {include file="error_icon.tpl.html" field="projects[]"}
+        </td>
+    </tr>
+    <tr>
+        <th width="120">
+            {t}Users{/t} *
+        </th>
+        <td width="80%">
+            <select id="users" name="users[]" multiple size="6" class="chosen-select">
+                {html_options options=$user_options selected=$info.users|default:''}
+            </select>
+            {include file="error_icon.tpl.html" field="users[]"}
+            <div id="selection_users" />
+        </td>
+    </tr>
+    <tr>
+        <th width="120">
+            {t}Manager{/t} *
+        </th>
+        <td width="80%">
+            <select name="manager" size="1">
+                <option value="">{t}-- Select One --{/t}</option>
+                {html_options options=$user_options selected=$info.grp_manager_usr_id|default:''}
+            </select>
+            {include file="error_icon.tpl.html" field="manager"}
+            {include file="lookup_field.tpl.html" lookup_field_name="manager_search" lookup_field_target="manager"}
+        </td>
+    </tr>
+    <tr class="buttons">
+        <td colspan="2">
+            {if $smarty.get.cat|default:'' == 'edit'}
+            <input type="submit" value="{t}Update Group{/t}">
+            {else}
+            <input type="submit" value="{t}Create Group{/t}">
+            {/if}
+            <input type="reset" value="{t}Reset{/t}">
+        </td>
+    </tr>
+  </table>
+  </form>
+
+  <form id="delete_group" method="post">
+  <table class="bordered grid">
+    <tr class="title">
+        <th colspan="5">
+            {t}Existing Groups{/t}
+        </th>
+    </tr>
+    <tr>
+        <th nowrap width="10"><input type="button" value="{t}All{/t}" class="select_all" ></th>
+        <th>&nbsp;{t}Name{/t}</th>
+        <th>&nbsp;{t}Description{/t}</th>
+        <th>&nbsp;{t}Manager{/t}</th>
+        <th>&nbsp;{t}Projects{/t}</th>
+    </tr>
+    {section name="i" loop=$list}
+    <tr class="{cycle values='odd,even'}">
+        <td width="4" nowrap align="center">
+            <input type="checkbox" name="items[]" value="{$list[i].grp_id}" {if $smarty.section.i.total == 0}disabled{/if}>
+        </td>
+        <td width="20%">
+            &nbsp;<a href="{$core.rel_url}manage/groups.php?cat=edit&id={$list[i].grp_id}" title="{t}update this entry{/t}">{$list[i].grp_name}</a>
+        </td>
+        <td width="20%">
+            &nbsp;{$list[i].grp_description}
+        </td>
+        <td width="40%">
+            &nbsp;{$list[i].manager}
+        </td>
+        <td width="20%">
+            &nbsp;{", "|join:$list[i].projects}
+        </td>
+    </tr>
+    {sectionelse}
+    <tr class="no_results">
+        <td colspan="5">
+            {t}No groups could be found.{/t}
+        </td>
+    </tr>
+    {/section}
+    <tr class="buttons">
+        <td colspan="5">
+            <input type="button" value="{t}All{/t}" class="select_all">
+            <input type="hidden" name="cat" value="delete">
+            <input type="submit" value="{t}Delete{/t}">
+        </td>
+    </tr>
+</table>
+</form>
+{/block}

@@ -1,0 +1,15 @@
+{if $list_id|default:'' == ''}
+    {capture assign="expand_all"}{t}Expand all collapsed cells{/t}{/capture}
+    {assign var="expand_tip" value=$expand_all}
+    {capture assign="collapse_all"}{t}Collapse all expanded cells{/t}{/capture}
+    {assign var="collapse_tip" value=$collapse_all}
+{else}
+    {capture assign="expand"}{t}Expand collapsed cell{/t}{/capture}
+    {assign var="expand_tip" value=$expand}
+    {capture assign="collapse"}{t}Collapse expanded cell{/t}{/capture}
+    {assign var="collapse_tip" value=$collapse}
+{/if}
+<div class="expandable_buttons {$ec_id}" data-expand-type="{$ec_id}" data-list-id="{$list_id|default:''}">
+    <i class="fa fa-plus-square-o expand" aria-hidden="true" title="{$expand_tip}"></i>
+    <i class="fa fa-minus-square-o collapse" aria-hidden="true" title="{$collapse_tip}"></i>
+</div>

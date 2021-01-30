@@ -1,0 +1,157 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+<script type="text/javascript">
+<!--
+var url = '{$core.rel_url}manage/account_managers.php';
+var cam_id = {$smarty.get.id|default:''|intval};
+
+function populateCustomerComboBox()
+{
+  if (cam_id == '') {
+      url += '?prj_id=' + Eventum.getField('project').val();
+  } else {
+      url += '?cat=edit&id=' + cam_id + '&prj_id=' + Eventum.getField('project').val();
+  }
+  window.location.href = url;
+}
+function checkDelete()
+{
+  if (!Validation.hasOneChecked('items[]')) {
+      alert('{t escape=js}Please select at least one of the account managers.{/t}');
+      return false;
+  }
+  if (!confirm('{t escape=js}This action will remove the selected account managers.{/t}')) {
+      return false;
+  } else {
+      return true;
+  }
+}
+  $().ready(function() {
+//      $('#manager_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+      $('select[name=project]').change(populateCustomerComboBox);
+
+      $('#delete_form').submit(checkDelete);
+  });
+//-->
+</script>
+
+<form name="manager_form" method="post">
+{if $smarty.get.cat|default:'' == 'edit'}
+<input type="hidden" name="cat" value="update">
+<input type="hidden" name="id" value="{$smarty.get.id|intval}">
+{else}
+<input type="hidden" name="cat" value="new">
+{/if}
+            <table class="bordered">
+              <tr class="title">
+                <th colspan="2">
+                  {t}Manage Customer Account Managers{/t}
+                </th>
+              </tr>
+              <tr>
+                <th width="150">
+                  {t}Project{/t}
+                </th>
+                <td width="80%">
+                  <select name="project">
+                    <option value="-1">{t}Please choose an option{/t}</option>
+                    {html_options options=$project_list selected=$info.cam_prj_id|default:''}
+                  </select>
+                  {include file="error_icon.tpl.html" field="project"}
+                </td>
+              </tr>
+              <tr>
+                <th width="150">
+                  {t}Customer{/t}
+                </th>
+                <td width="80%">
+                  <select name="customer">
+                  {html_options options=$customers|default:'' selected=$info.cam_customer_id|default:''}
+                  </select>
+                  {include file="error_icon.tpl.html" field="customer"}
+                </td>
+              </tr>
+              <tr>
+                <th width="150">
+                  {t}Account Manager{/t}
+                </th>
+                <td width="80%">
+                  <select name="manager">
+                  {html_options options=$user_options|default:'' selected=$info.cam_usr_id|default:''}
+                  </select>
+                  {include file="error_icon.tpl.html" field="manager"}
+                </td>
+              </tr>
+              <tr>
+                <th width="150">
+                  {t}Type{/t}
+                </th>
+                <td width="80%">
+                  <select name="type">
+                    <option value="primary" {if $info.cam_type|default:'' == 'primary'}selected{/if}>{t}Primary Technical Account Manager{/t}</option>
+                    <option value="backup" {if $info.cam_type|default:'' == 'backup'}selected{/if}>{t}Backup Technical Account Manager{/t}</option>
+                    <option value="intpart" {if $info.cam_type|default:'' == 'intpart'}selected{/if}>{t}Interested Party{/t}</option>
+                  </select>
+                </td>
+              </tr>
+              <tr class="buttons">
+                <td colspan="2">
+                  {if $smarty.get.cat|default:'' == 'edit'}
+                  <input type="submit" value="{t}Update Account Manager{/t}">
+                  {else}
+                  <input type="submit" value="{t}Create Account Manager{/t}">
+                  {/if}
+                  <input type="reset" value="{t}Reset{/t}">
+                </td>
+              </tr>
+            </table>
+            </form>
+
+            <form id="delete_form" method="post">
+            <input type="hidden" name="cat" value="delete">
+            <table class="bordered grid">
+              <tr class="title">
+                <th colspan="2">
+                  {t}Existing Customer Account Managers{/t}
+                </th>
+              </tr>
+                <tr>
+                  <th width="4" nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+                  <th width="40%">&nbsp;{t}Customer{/t}</th>
+                  <th width="40%">&nbsp;{t}Account Manager{/t}</th>
+                  <th width="20%">&nbsp;{t}Type{/t}</th>
+                </tr>
+                {section name="i" loop=$list}
+                <tr class="{cycle values='odd,even'}">
+                  <td width="4" nowrap align="center">
+                    <input type="checkbox" name="items[]" value="{$list[i].cam_id}">
+                  </td>
+                  <td width="40%">
+                    &nbsp;{$list[i].customer_title|default:''}
+                  </td>
+                  <td width="40%">
+                    &nbsp;<a href="{$core.rel_url}manage/account_managers.php?cat=edit&id={$list[i].cam_id}" title="{t}update this entry{/t}">{$list[i].usr_full_name|escape:html}</a>
+                  </td>
+                  <td width="20%">
+                    &nbsp;{$list[i].cam_type}
+                  </td>
+                </tr>
+                {sectionelse}
+                <tr class="no_results">
+                  <td colspan="4" align="center">
+                    {t}No account managers could be found.{/t}
+                  </td>
+                </tr>
+                {/section}
+                <tr class="buttons">
+                  <td colspan="4">
+                    <input type="button" value="{t}All{/t}" class="select_all">
+                    <input type="submit" value="{t}Delete{/t}">
+                  </td>
+                </tr>
+      </table>
+      </form>
+{/block}

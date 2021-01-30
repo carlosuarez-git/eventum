@@ -1,0 +1,125 @@
+{extends "base.tpl.html"}
+{block title}#{$issue_id} - Authorized Replier List{/block}
+
+{block "javascripts" append}
+<script type="text/javascript">
+function validate(f)
+{
+    if (Validation.isWhitespace(f.email.value)) {
+        alert('{t escape=js}Please enter a valid email address.{/t}');
+        selectField(f, 'email');
+        return false;
+    }
+    return true;
+}
+function removeOption(f, field_name)
+{
+    var field = getFormElement(f, field_name);
+    for (var i = 0; i < field.options.length; i++) {
+        if (field.options[i].selected) {
+            field.options[i] = null;
+            removeOption(f, field_name);
+        }
+    }
+}
+function checkDelete(f)
+{
+    if (!hasOneChecked(f, 'items[]')) {
+        alert('{t escape=js}Please select at least one of the authorized repliers.{/t}');
+        return false;
+    }
+    if (!confirm('{t escape=js}This action will remove the selected entries.{/t}')) {
+        return false;
+    }
+
+    return true;
+}
+
+$(function ($) {
+  $('#users').change(function () {
+    Eventum.getField('email').val($(this).val());
+  });
+});
+
+</script>
+
+{/block}
+
+{block "content"}
+  {if $core.current_role > $core.roles.reporter}
+<form name="replier_form" onSubmit="return validate(this);" method="post">
+{if $smarty.get.cat|default:'' == 'edit'}
+<input type="hidden" name="cat" value="update">
+<input type="hidden" name="id" value="{$issue_id}">
+{else}
+<input type="hidden" name="cat" value="insert">
+{/if}
+<input type="hidden" name="issue_id" value="{$issue_id}">
+<table class="bordered">
+    <tr class="title">
+      <th colspan="2">
+        {t}Authorized Repliers{/t}
+      </th>
+    </tr>
+    <tr>
+      <th width="120">
+        {t}Email{/t}
+      </th>
+      <td>
+        <select id="users" class="chosen-select"
+                data-placeholder="{t}Choose User…{/t}">
+          {html_options options=$users}
+        </select><br/>
+        <input type="text" name="email" size="40" value="{$info.sub_email|default:''}">
+        {include file="error_icon.tpl.html" field="email"}
+      </td>
+    </tr>
+    <tr class="buttons">
+      <td colspan="2">
+        <input type="submit" value="{t}Add Authorized Replier{/t}">
+        <input type="reset" value="{t}Reset{/t}">
+      </td>
+    </tr>
+</table>
+</form>
+{/if}
+
+<form onSubmit="return checkDelete(this);" method="post">
+<input type="hidden" name="cat" value="delete">
+<input type="hidden" name="issue_id" value="{$issue_id}">
+<table class="bordered grid">
+    <tr class="title">
+      <th colspan="2">
+        {t}Existing Authorized Repliers for this Issue{/t}
+      </th>
+    </tr>
+      <tr>
+        <th nowrap>&nbsp;</th>
+        <th>{t}Email{/t}</th>
+      </tr>
+      {section name="i" loop=$list.all}
+      <tr class="{cycle values='odd,even'}">
+        <td width="4" nowrap><input type="checkbox" name="items[]" value="{$list.all[i].iur_id}"></td>
+        <td width="100%">
+          {$list.all[i].replier|escape:"html"}
+          {if $list.all[i].replier_type == 'user'}&lt;{$list.all[i].usr_email|escape:"html"}&gt;{/if}
+        </td>
+      </tr>
+      {sectionelse}
+      <tr class="no_results">
+        <td colspan="3">
+          {t}No authorized repliers could be found.{/t}
+        </td>
+      </tr>
+      {/section}
+      {if $core.current_role > $core.roles.reporter}
+      <tr class="buttons">
+        <td colspan="3">
+          <input type="submit" value="{t}Remove Selected{/t}">
+          <input type="button" value="{t}Close{/t}" onClick="Eventum.close_and_refresh();">
+        </td>
+      </tr>
+      {/if}
+  </table>
+</form>
+{/block}

@@ -1,0 +1,388 @@
+{extends "base.tpl.html"}
+{block "title"}#{$issue_id} - Reply{/block}
+
+{block "javascripts" append}
+  {include file="include/dropzone.tpl.html" form="sendEmailForm" param="dropfile"}
+{/block}
+
+{block "content"}
+{if $send_result|default:'' != ''}
+<br />
+<center>
+{if $send_result == -1}
+  <span>{t}An error occurred while trying to run your query{/t}</span>
+{elseif $send_result == -2}
+  <span>{t}Sorry, but the email could not be queued. This might be related to problems with your SMTP account settings.{/t}<br />
+ {t}Please contact the administrator of this application for further assistance.{/t}</span>
+{elseif $send_result == 1}
+  <span>{t}Thank you, the email was queued to be sent successfully.{/t}</span>
+{/if}
+
+</center>
+<script type="text/javascript">
+<!--
+{if $garlic_prefix|default:'' != ''}
+Eventum.clearAutoSave('{$garlic_prefix}');
+{/if}
+
+{if $core.current_user_prefs.close_popup_windows}
+setTimeout('Eventum.close_and_refresh()', 2000);
+{/if}
+//-->
+</script>
+<br />
+{if not $core.current_user_prefs.close_popup_windows}
+  <center>
+    <span><a href="javascript:void(null);" onClick="Eventum.close_and_refresh();">{t}Continue{/t}</a></span>
+  </center>
+{/if}
+{elseif $draft_result|default:'' != ''}
+<br />
+<center>
+  <span>
+{if $draft_result|default:'' == -1}
+  {t}An error occurred while trying to run your query{/t}
+{elseif $draft_result|default:'' == 1}
+  {t}Thank you, the email message was saved as a draft successfully.{/t}
+{/if}
+  </span>
+</center>
+<script type="text/javascript">
+<!--
+{if $core.current_user_prefs.close_popup_windows}
+setTimeout('Eventum.close_and_refresh()', 2000);
+{/if}
+//-->
+</script>
+<br />
+{if not $core.current_user_prefs.close_popup_windows}
+  <center>
+    <span><a href="javascript:void(null);" onClick="Eventum.close_and_refresh();">{t}Continue{/t}</a></span>
+  </center>
+{/if}
+{else}
+<script type="text/javascript">
+<!--
+$(function() {
+    $('textarea[name=message]').one('keydown', function() {
+        Eventum.checkWindowClose('{t}If you close this window, you will lose any uploaded attachments.{/t}');
+    });
+});
+
+var email_responses = [];
+{section name="i" loop=$js_canned_responses}
+email_responses[{$js_canned_responses[i].ere_id}] = {$js_canned_responses[i].ere_response_body|json_encode};
+{/section}
+
+function validateForm()
+{
+    var to_field = Eventum.getField('to');
+    if (to_field.length > 0) {
+        if (Validation.isFieldWhitespace(to_field)) {
+            Validation.errors[Validation.errors.length] = new Option('{t escape=js}To{/t}', 'to');
+        }
+    }
+    if (Validation.isFieldWhitespace('subject')) {
+        Validation.errors[Validation.errors.length] = new Option('{t escape=js}Subject{/t}', 'subject');
+    }
+    if (Validation.isFieldWhitespace('message')) {
+        Validation.errors[Validation.errors.length] = new Option('{t escape=js}Message{/t}', 'message');
+    }
+
+    var leave_page = true;
+{if $core.current_role != $core.roles.customer and $issue_id|default:'' != 0}
+    {if !$can_send_email}
+    var warning_msg = "{t}WARNING: You are not assigned to this issue so your email will be blocked.\nYour blocked email will be converted to a note that can be recovered later.\nFor more information, please see the topic 'email blocking' in help.{/t}";
+    {elseif $core.has_crm}
+    var warning_msg = "{t}WARNING: This email will be sent to all names on this issue's Notification List, including CUSTOMERS.\nIf you want the CUSTOMER to receive your message now, press OK.\nOtherwise, to return to your editing window, press CANCEL.{/t}";
+    {else}
+    var warning_msg = "{t}WARNING: This email will be sent to all names on this issue's Notification List.\nIf you want all users to receive your message now, press OK.\nOtherwise, to return to your editing window, press CANCEL.{/t}";
+    {/if}
+
+    if ((Validation.errors.length < 1)) {
+        if ($.inArray(Eventum.getField('cat').val(), ['save_draft', 'update_draft']) == -1) {
+            leave_page = confirm(warning_msg);
+        }
+        if (leave_page) {
+            Eventum.checkWindowClose(false);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+{else}
+    Eventum.checkWindowClose(false);
+    return true;
+{/if}
+
+}
+function setResponseBody()
+{
+    var response_id = Eventum.getField('email_response').val();
+    if (email_responses[response_id]) {
+        Eventum.getField('message').val(email_responses[response_id]);
+    }
+}
+function saveDraft()
+{
+    Eventum.checkWindowClose(false);
+    Eventum.getField('cat').val('save_draft');
+    Eventum.getField('sendEmailForm').submit();
+}
+function updateDraft(f)
+{
+    Eventum.checkWindowClose(false);
+    Eventum.getField('cat').val('update_draft');
+    Eventum.getField('sendEmailForm').submit();
+}
+var old_message = '';
+function setSignature(f)
+{
+
+    var signature = "{$core.current_user_prefs.email_signature|replace:'"':'\"'|replace:"\r":""|replace:"\n":'\n'}";
+
+    if (f.add_email_signature.checked) {
+        old_message = f.message.value;
+        f.message.value += "\n";
+        f.message.value += signature;
+    } else {
+        f.message.value = old_message;
+    }
+}
+
+$().ready(function() {
+    Eventum.getField('message').focus();
+
+    var $send_email_form = $('#sendEmailForm');
+    var field_keys = ['garlic', $send_email_form.find('input[name=issue_id]').val(),
+        $send_email_form.find('input[name=parent_id]').val(), $send_email_form.find('input[name=note_id]').val()];
+    if ($send_email_form.find('input[name=draft_id]').length) {
+        field_keys.push($send_email_form.find('input[name=draft_id]').val());
+    }
+
+    var garlic_prefix = field_keys.join('_');
+    $('#garlic_prefix').val(garlic_prefix);
+
+    $send_email_form.garlic({
+       getPath: function ( $elem ) {
+           return garlic_prefix + '_' + $elem.attr('name');
+       }
+    });
+
+    $('#reset').click(function()
+    {
+        Eventum.clearAutoSave(garlic_prefix);
+        window.close();
+    })
+});
+//-->
+</script>
+
+<form class="validate dropzone" data-validation-function='validateForm' id="sendEmailForm" name="sendEmailForm" method="post" enctype="multipart/form-data" data-destroy="false">
+<input type="hidden" name="cat" value="send_email">
+<input type="hidden" name="parent_id" value="{$parent_email_id|default:''}">
+<input type="hidden" name="note_id" value="{$note_id|default:''}">
+<input type="hidden" name="ema_id" value="{$ema_id|default:''}">
+<input type="hidden" name="issue_id" value="{$issue_id|default:''}">
+<input type="hidden" name="garlic_prefix" value="" id="garlic_prefix">
+{if $smarty.get.cat|default:'' == 'view_draft'}
+<input type="hidden" name="draft_id" value="{$draft_id|default:''}">
+{/if}
+{if $draft_status|default:'' == 'sent'}
+    <div class="banner_red">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      {t}Warning: This draft has already been sent. You cannot resend it.{/t}
+    </div>
+{elseif $draft_status|default:'' == 'edited'}
+  <div class="banner_red">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+    {t}Warning: This draft has already been edited. You cannot send or edit it.{/t}
+  </div>
+{/if}
+  <table class="bordered">
+    <tr class="title">
+      <th colspan="2">
+        {if $smarty.get.cat|default:'' == 'create_draft'}
+            {t}Create Draft{/t}
+        {else}
+            {t}Send Email{/t}
+        {/if}
+      </th>
+    </tr>
+    <tr>
+      <th width="120">
+        {t}From{/t}
+      </th>
+      <td>
+        <input type="hidden" name="from" value="{$from|escape:"html"}">
+        {$from|escape:"html"}
+      </td>
+    </tr>
+    <tr>
+      <th width="120">
+        {t}To{/t} *
+      </th>
+      <td>
+        {if $issue_id|default:'' == ''}
+            <input type="text" name="to" size="50" value="{$email.sup_from|escape:"html"}">
+            {include file="error_icon.tpl.html" field="to"}
+        {else}
+            <span>
+              {t escape=no
+                1=$issue_id
+                2="{$core.rel_url}view.php?id={$issue_id}"
+              }Issue <a href="%2" target="_blank">#%1</a> Notification List{/t}
+
+              ({t 1=$subscribers.all}Members: %1{/t})
+            </span>
+        {/if}
+      </td>
+    </tr>
+    <tr>
+      <th width="120">
+        {t}Cc{/t}
+      </th>
+      <td>
+        <input type="text" name="cc" size="50" value="{$email.cc|default:''|escape:"html"}" {if $read_only|default:'' == 1}readonly{/if}>
+          {include file="error_icon.tpl.html" field="cc"}<br />
+        {if $issue_id|default:'' and $core.current_role != $core.roles.customer and $read_only|default:'' != 1}
+        <label>
+            <input type="checkbox" name="add_unknown" value="yes" {if $should_auto_add_to_nl}checked{/if}>
+            {t}Add Unknown Recipients to Issue Notification List{/t}
+        </label><br />
+        <label>
+            <input type="checkbox" name="add_cc_to_ar" value="yes">
+            {t}Add CC to Authorized Repliers List{/t}
+        </label>
+        {else}
+        <input type="hidden" name="add_unknown" value="no">
+        {/if}
+      </td>
+    </tr>
+    <tr>
+      <th width="120">
+        {t}Subject{/t} *
+      </th>
+      <td>
+        <input type="text" name="subject" size="50" value="{if $smarty.get.cat|default:'' == 'view_draft'}{$email.sup_subject|escape:"html"}{else}{$email.reply_subject|default:''|escape:"html"}{/if}" {if $read_only|default:'' == 1}readonly{/if}>
+        {include file="error_icon.tpl.html" field="subject"}
+      </td>
+    </tr>
+    {if $core.current_role != $core.roles.customer and $canned_responses|@count > 0 and $read_only|default:'' != 1}
+    <tr class="internal">
+      <th>
+        {t}Canned Responses{/t}
+      </th>
+      <td>
+        <select name="email_response">
+          {html_options options=$canned_responses}
+        </select>&nbsp;<input type="button" class="shortcut" value="{t}Use Canned Response{/t}" onClick="setResponseBody(this.form);"><br />
+      </td>
+    </tr>
+    {/if}
+    <tr>
+      <td colspan="2">
+        <textarea name="message" rows="15" style="width: 97%" {if $read_only|default:'' == 1}readonly{/if}>{$email.seb_body|escape:"html"|default:''}{if $core.current_user_prefs.auto_append_email_sig && $body_has_sig_already|default:0 != 1}
+
+
+{$core.current_user_prefs.email_signature|escape:html}{/if}</textarea>
+        {include file="error_icon.tpl.html" field="message"}
+      </td>
+    </tr>
+    <tr>
+      <th width="120">
+        Attachment
+      </th>
+      <td>
+        <div class="dz-message">
+          {if empty($smarty.get.legacy)}
+            {t}Drop files here or click to upload.{/t}
+          {/if}
+
+          <div class="dropzone-previews"></div>
+
+          <div class="fallback">
+            <input type="file" name="attachment[]" size="30"/>
+          </div>
+
+          <input type="hidden" name="iaf_ids" id="iaf_ids" value="">
+
+          <div><i>{t 1=$max_attachment_size}Note: The current maximum allowed upload file size is %1{/t}</i></div>
+        </div>
+      </td>
+    </tr>
+    {if $issue_id|default:'' and $core.current_role > $core.roles.customer and $read_only|default:'' != 1}
+        {if $hide_email_buttons|default:'' != 'yes'}
+    <tr>
+      <th width="120">
+        {t}New Status for Issue{/t} #{$issue_id}
+      </th>
+      <td>
+        <select name="new_status" data-storage="false">
+          {html_options options=$statuses selected=$current_issue_status}
+        </select>
+      </td>
+    </tr>
+    {/if}
+    <tr>
+      <th width="120">
+        {t}Time Spent{/t}
+      </th>
+      <td>
+        <input type="text" size="5" name="time_spent" data-storage="false">
+        <select name="time_category">
+            {html_options options=$time_categories selected=$email_category_id}
+        </select>
+        <span><i>({t}in minutes{/t})</i></span>
+      </td>
+    </tr>
+    <tr>
+        <th nowrap>{t}Time Summary{/t}</th>
+        <td>
+            <input type="text" name="time_summary" size="40" data-storage="false">{include file="error_icon.tpl.html" field="time_summary"}
+        </td>
+    </tr>
+    {/if}
+    {if $hide_email_buttons|default:'' != 'yes'}
+    <tr class="buttons">
+      <td colspan="2">
+          {if $read_only|default:'' != 1}
+          <input type="submit" value="{t}Send Email{/t}">&nbsp;&nbsp;
+          {/if}
+          <input name="cancel" type="reset" value="{t}Cancel{/t}" id="reset">
+
+          <div class="right">
+            {if not $core.current_user_prefs.auto_append_email_sig and $core.current_user_prefs.email_signature}
+              <label>
+              <input type="checkbox" name="add_email_signature" value="yes" onClick="setSignature(this.form);">
+              {t}Add Email Signature{/t}
+              </label>
+            {/if}
+          </div>
+      </td>
+    </tr>
+    {/if}
+    {if $issue_id|default:'' and $core.current_role != $core.roles.customer}
+    <tr class="buttons internal">
+      <td colspan="2">
+        {if $read_only|default:'' != 1}
+        {if $smarty.get.cat|default:'' == 'view_draft'}
+        <input type="button" value="{t}Save Draft Changes{/t}" onClick="updateDraft(this.form);">
+        {else}
+        <input type="button" value="{t}Save as Draft{/t}" onClick="saveDraft(this.form);">
+        {/if}
+        {/if}
+      </td>
+    </tr>
+    {/if}
+    <tr>
+      <td colspan="2">
+        * {t}Required fields{/t}
+      </td>
+    </tr>
+  </table>
+</form>
+{/if}
+
+{/block}

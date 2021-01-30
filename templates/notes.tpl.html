@@ -1,0 +1,125 @@
+
+<script type="text/javascript">
+<!--
+function deleteNote(el)
+{
+    if (!confirm('{t escape=js}This action will permanently delete the specified note.{/t}')) {
+        return false;
+    }
+
+    var features = 'width=420,height=200,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+    var popupWin = window.open(el.getAttribute('href'), null, features);
+    popupWin.focus();
+    return false;
+}
+function convertNote(el)
+{
+    if (!confirm('{t escape=js}This note will be deleted & converted to an email, one either sent immediately or saved as a draft.{/t}')) {
+        return false;
+    }
+
+    var features = 'width=420,height=180,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+    var popupWin = window.open(el.getAttribute('href'), null, features);
+    popupWin.focus();
+    return false;
+}
+function viewNote(el)
+{
+    var features = 'width=560,height=500,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+    var noteWin = window.open(el.getAttribute('href'), null, features);
+    noteWin.focus();
+    return false;
+}
+function postInternalNote(issue_id)
+{
+    var features = 'width=600,height=700,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+    var noteWin = window.open('post_note.php?issue_id=' + issue_id, null, features);
+    noteWin.focus();
+}
+function replyNote(el)
+{
+    var features = 'width=600,height=700,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+    var noteWin = window.open(el.getAttribute('href'), null, features);
+    noteWin.focus();
+    return false;
+}
+function replyAsEmail(el)
+{
+    var features = 'width=600,height=700,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+    var noteWin = window.open(el.getAttribute('href'), null, features);
+    noteWin.focus();
+    return false;
+}
+//-->
+</script>
+
+{function name="reply_button" class="" title="" href="" onclick=""}
+  {strip}
+    <a title="{$title}" href="{$href}" onClick="{$onclick}">
+      <i class="fa fa-reply {$class}" aria-hidden="true"></i>
+    </a>
+  {/strip}
+{/function}
+
+<form name="add_note_form" target="_notes" method="post">
+<div class="issue_section bordered internal" id="internal_notes">
+    <div class="title">
+        {t}Internal Notes{/t} ({$notes|@count})
+        <span class="menu">
+            [ <a href="#top">{t}Back to Top{/t}</a> ]
+            [ <span class="js_link" id="toggle_internal_notes">{get_display_label element_name="internal_notes" total=$notes|@count}</a> ]
+        </span>
+    </div>
+    <div class="content" {get_display_style element_name='internal_notes' total=$notes|@count}>
+        <table class="grid internal">
+          <tr>
+            <th nowrap>{include file="expandable_cell/buttons.tpl.html" ec_id="note"}</th>
+            <th align="center">#</th>
+            <th>{t}Reply{/t}</th>
+            <th width="20%">{t}Posted Date{/t}</th>
+            <th width="20%">{t}User{/t}</th>
+            <th width="60%">{t}Title{/t}</th>
+          </tr>
+          {section name="i" loop=$notes}
+          {cycle values='odd,even' assign="row_class"}
+          <tr class="{$row_class}">
+            <td nowrap>{include file="expandable_cell/buttons.tpl.html" ec_id="note" list_id=$notes[i].not_id}</td>
+            <td align="center">{$smarty.section.i.iteration}</td>
+            <td align="center" nowrap>
+              {reply_button title="{t}reply as email{/t}" class="reply_as_email" href="send.php?cat=reply_to_note&note_id={$notes[i].not_id}&issue_id={$smarty.get.id|intval}" onclick="return replyAsEmail(this);"}
+              {reply_button title="{t}reply as note{/t}" class="reply_note" href="post_note.php?cat=reply&id={$notes[i].not_id}&issue_id={$smarty.get.id|intval}" onclick="return replyNote(this);"}
+            </td>
+            <td>{$notes[i].not_created_date|timeago}</td>
+            <td>
+              {$notes[i].usr_full_name|escape:"html"}
+              {if $notes[i].not_usr_id && !$notes[i].not_usr_status_active}
+                <i class="user-status">({$notes[i].not_usr_status})</i>
+              {/if}
+
+              {if $core.user.usr_id == $notes[i].not_usr_id OR $core.current_role >= $core.roles.manager}[ <a href="popup.php?cat=delete_note&id={$notes[i].not_id}" onClick="return deleteNote(this)">{t}delete{/t}</a> ]{/if}
+            </td>
+            <td>
+              <a title="{t}view note details{/t}" href="view_note.php?id={$notes[i].not_id}" onClick="return viewNote(this)">{$notes[i].not_title|default:"<Empty Title>"|escape:"html"}</a>
+              {if $notes[i].not_has_attachment}
+                <i class="fa fa-paperclip" aria-hidden="true"></i>
+              {/if}
+              {if $notes[i].has_blocked_message} (<a href="convert_note.php?id={$notes[i].not_id}" onClick="return convertNote(this)">{t}convert note{/t}</a>){/if}
+            </td>
+          </tr>
+          {include file="expandable_cell/body.tpl.html" ec_id="note" list_id=$notes[i].not_id colspan="6" class=$row_class}
+          {sectionelse}
+          <tr class="no_results">
+            <td colspan="6">
+              {t}No internal notes could be found.{/t}
+            </td>
+          </tr>
+          {/section}
+        </table>
+    </div>
+    {if $core.current_role > $core.roles.reporter}
+    <div class="buttons">
+      <input type="button" value="{t}Post Internal Note{/t}" onClick="postInternalNote({$smarty.get.id|intval});">
+    </div>
+    {/if}
+</div>
+</form>

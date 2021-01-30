@@ -1,0 +1,133 @@
+{extends "base.tpl.html"}
+{block "title"}#{$issue_id} - Upload File{/block}
+
+{block "javascripts" append}
+  {include file="include/dropzone.tpl.html" form="dropzone" param="dropfile"}
+{/block}
+
+{block "content"}
+{if $core.current_role > $core.roles.viewer}
+{if $upload_file_result|default:'' != ''}
+    <br />
+    <center>
+    <span><b>
+    {if $upload_file_result == -1}
+      {t}An error occurred while trying to process the uploaded file.{/t}
+    {elseif $upload_file_result == -2}
+      {t}The uploaded file is already attached to the current issue. Please rename the file and try again.{/t}
+    {elseif $upload_file_result == 1}
+      {t}Thank you, the uploaded file was associated with the issue below.{/t}
+    {/if}
+    </b></span>
+    </center>
+    <script type="text/javascript">
+    <!--
+    {if $upload_file_result == 1 and $core.current_user_prefs.close_popup_windows}
+    setTimeout('Eventum.close_and_refresh()', 2000);
+    {/if}
+    //-->
+    </script>
+    <br />
+    {if not $core.current_user_prefs.close_popup_windows}
+    <center>
+      <span><a href="javascript:void(null);" onClick="Eventum.close_and_refresh();">{t}Continue{/t}</a></span>
+    </center>
+    {/if}
+{else}
+<script type="text/javascript">
+function validateUpload(f)
+{
+  {if !empty($smarty.get.legacy)}
+  if ($("input[name='attachment[]'][value!='']").length < 1) {
+        Validation.errors[Validation.errors.length] = new Option('Files', 'attachment[]');
+    }
+  {else}
+  if ($("#iaf_ids").val().length < 1) {
+      alert('Please select at least one file to upload');
+      return false;
+  }
+  {/if}
+}
+</script>
+
+    <form name="attachment_form" id="dropzone" action="file_upload.php" method="post" enctype="multipart/form-data" class="dropzone validate" data-validation-function="validateUpload">
+
+    <table class="bordered">
+    <tr class="title">
+      <th colspan="2">{t}Add New Files{/t}:</th>
+    </tr>
+    <input type="hidden" name="cat" value="upload_file">
+    <input type="hidden" name="issue_id" value="{$issue_id}">
+    <input type="hidden" name="iaf_ids" id="iaf_ids" value="">
+
+      {if $core.current_role > $core.roles.customer}
+      <tr>
+        <th width="120" nowrap class="internal">
+          {t}Minimum Role{/t}
+        </th>
+        <td>
+          <select name="minimum_role">
+              {html_options options=$roles}
+          </select>
+        </td>
+      </tr>
+      {else}
+      <input type="hidden" name="status" value="public">
+      {/if}
+      <tr>
+        <th>
+          {t}Filenames{/t}
+        </th>
+        <td>
+          <div class="dz-message">
+            {if empty($smarty.get.legacy)}
+              {t}Drop files here or click to upload.{/t}
+            {/if}
+
+          <div class="dropzone-previews"></div>
+
+          <div class="fallback">
+          <table width="100%" cellpadding="2" cellspacing="0" id="file_table">
+            <tr>
+              <td><input size="50" name="attachment[]" type="file" class="shortcut"></td>
+            </tr>
+            <tr>
+              <td><input size="50" name="attachment[]" type="file" class="shortcut"></td>
+            </tr>
+            <tr>
+              <td><input size="50" name="attachment[]" type="file" class="shortcut"></td>
+            </tr>
+          </table>
+          </div>
+
+          <br/><br/>
+          <i>{t 1=$max_attachment_size}Note: The current maximum allowed upload file size is %1{/t}</i>
+
+          </div>
+
+          {if empty($smarty.get.legacy)}
+          <br/>
+          <b>{t}NOTE{/t}</b>: {t escape=no 1="?iss_id=$issue_id&legacy=1"}To use legacy uploader, click <a href="%1">here</a>{/t}
+          {/if}
+        </td>
+      </tr>
+      <tr>
+        <th>
+          {t}Description{/t}:
+        </th>
+        <td>
+          <textarea name="file_description" rows="4" style="width: 97%"></textarea>
+        </td>
+      </tr>
+      <tr class="buttons">
+        <td colspan="2">
+          <input type="submit" value="{t}Upload File{/t}">
+        </td>
+      </tr>
+  </table>
+  </form>
+{/if}
+{else}
+<center><span>{t}You do not have the correct role to access this page{/t}</span></center>
+{/if}
+{/block}

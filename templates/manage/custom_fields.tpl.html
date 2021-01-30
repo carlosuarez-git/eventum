@@ -1,0 +1,459 @@
+{extends "manage/manage.tpl.html"}
+
+{function name="rank_icon" direction="down" href=""}
+  {include file="include/rank_icon.tpl.html" direction=$direction href=$href}
+{/function}
+
+{block "javascripts" append}
+
+  <script type="text/javascript">
+  <!--
+  var editing_option_id = -1;
+  function validateForm()
+  {
+      var f = $('#email_account_form');
+      if (Validation.isFieldWhitespace('title')) {
+          alert('{t escape=js}Please enter the title of this custom field.{/t}');
+          Validation.selectField('title');
+          return false;
+      }
+      if (!Validation.hasOneSelected('projects[]')) {
+          alert('{t escape=js}Please assign the appropriate projects for this custom field.{/t}');
+          Validation.selectField('projects[]');
+          return false;
+      }
+      if (Eventum.getField('min_role').val() > Eventum.getField('min_role_edit').val()) {
+          alert('{t escape=js}Minimum Edit Role cannot be less than minimum view role.{/t}');
+          Validation.selectField('min_role_edit');
+          return false;
+      }
+
+      if (!Eventum.getField('field_type').filter(":checked").length) {
+          alert('{t escape=js}Field type is required.{/t}');
+          Validation.selectField('field_type');
+          return false;
+      }
+
+      // warn if they have de-selected a project
+      var projects = Eventum.getField('projects[]');
+      var selections = projects.val();
+      var removed_projects = '';
+      for (var i=0; i < selected_projects.length; i++) {
+          var is_still_selected = false;
+          for (var j=0; j < selections.length; j++) {
+              if (selections[j].value === selected_projects[i].value) {
+                  is_still_selected = true;
+              }
+          }
+          if (is_still_selected === false) {
+              if (removed_projects.length > 0) {
+                  removed_projects += ', ';
+              }
+              removed_projects += "'" + selected_projects[i].text + "'";
+          }
+      }
+      if (removed_projects.length > 0) {
+          var answer = confirm('{t escape=js}WARNING: You have removed project(s){/t} ' + removed_projects + ' {t}from the list{/t} ' +
+             '{t escape=js}of associated projects. This will remove all data for this field from the selected project(s).{/t} ' +
+             '{t escape=js}Do you want to continue?{/t}');
+          if (answer === false) {
+              return false;
+          }
+      }
+      if ($('input[name=field_type].enable_custom_options:checked').length > 0) {
+          // select all of the options in the select box
+          Eventum.selectAllOptions('field_options[]');
+      }
+      return true;
+  }
+  function addFieldOption()
+  {
+      var val_field = $('input[name=new_value]');
+      var value = val_field.val();
+      if (Validation.isWhitespace(value)) {
+          alert('{t escape=js}Please enter the new value for the combo box.{/t}');
+          val_field.val('');
+          val_field.focus();
+          return false;
+      }
+      var field = $('[name=field_options\\[\\]]')[0];
+      var current_length = field.options.length;
+      if (current_length == 1) {
+          if (field.options[0].value == -1) {
+              Eventum.removeOptionByValue('field_options[]', "-1");
+          }
+      }
+      // check for an existing option with the same value
+      for (var i = 0; i < field.options.length; i++) {
+          if (field.options[i].text == value) {
+              alert('{t escape=js}The specified value already exists in the list of options.{/t}');
+              val_field.focus();
+              return false;
+          }
+      }
+      current_length = field.options.length;
+      field.options[current_length] = new Option(value, 'new:' + value);
+      val_field.val('');
+      val_field.focus();
+  }
+  function parseParameters(value)
+  {
+      value = value.substring(value.indexOf(':')+1);
+      var id = value.substring(0, value.indexOf(':'));
+      var text = value.substring(value.indexOf(':')+1);
+      return new Option(text, id);
+  }
+  function updateFieldOption()
+  {
+      var new_value = Eventum.getField('new_value').val();
+      if (Validation.isWhitespace(new_value)) {
+          alert('{t escape=js}Please enter the updated value.{/t}');
+          return false;
+      }
+      var option = Eventum.getField('field_options[]').children('option').filter("[value='" + editing_option_id + "']");
+      var params = parseParameters(option.val());
+      option.val('existing:' + params.value + ':' + new_value);
+      option.text(new_value);
+      Eventum.getField('new_value').val('');
+      Eventum.getField('update_button').attr('disabled', true);
+  }
+  function editFieldOption()
+  {
+      var options = Eventum.getField('field_options[]').children(':selected');
+      if (options.length == 0) {
+          alert('{t escape=js}Please select an option from the list.{/t}');
+          return false;
+      }
+      editing_option_id = options[0].value;
+      Eventum.getField('new_value').val(options[0].text).focus();
+      Eventum.getField('update_button').attr('disabled', false);
+  }
+  function removeFieldOption(e)
+  {
+      if (!Validation.hasOneSelected('field_options[]')) {
+          alert('{t escape=js}Please select an option from the list.{/t}');
+          return false;
+      }
+      Eventum.getField('field_options[]').find('option:selected').remove();
+      var field = Eventum.getField('field_options[]')[0];
+      if (field.options.length == 0) {
+          field.options[0] = new Option('{t escape=js}enter a new option above{/t}', '-1');
+      }
+  }
+  function toggleCustomOptionsField()
+  {
+      if ($(".enable_custom_options:checked").length > 0) {
+          $('.custom_option').attr('disabled', false);
+      } else {
+          $('.custom_option').attr('disabled', true);
+      }
+  }
+  function checkRequiredFields()
+  {
+      $('input.target_form').each(function(index) {
+          var target = $(this);
+          var required = $("input[name=" + target.attr('name') + '_required]');
+          if (target.is(":checked")) {
+              required.attr('disabled', false);
+          } else {
+              required.attr('disabled', true);
+              required.attr('checked', false);
+          }
+      });
+  }
+  function checkDelete()
+  {
+      if (!Validation.hasOneChecked('items[]')) {
+          alert('{t escape=js}Please select at least one of the custom fields.{/t}');
+          return false;
+      }
+      if (!confirm('{t escape=js}This action will permanently remove the selected custom fields.{/t}')) {
+          return false;
+      } else {
+          return true;
+      }
+  }
+  $().ready(function() {
+      $('#custom_field_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+      toggleCustomOptionsField()
+      $('input[name=field_type]').change(toggleCustomOptionsField);
+
+      checkRequiredFields();
+      $('input.target_form').change(checkRequiredFields);
+
+      $('#delete_form').submit(checkDelete);
+
+      $('input[name=add_button]').click(addFieldOption);
+      $('input[name=edit_button]').click(editFieldOption);
+      $('input[name=remove_button]').click(removeFieldOption);
+      $('input[name=update_button]').click(updateFieldOption);
+  });
+
+  var selected_projects = [];
+  {if $info.project|default:'' != '' && $info.project|@count > 0}
+  {foreach from=$info.projects item=prj_id}
+  selected_projects[selected_projects.length] = new Option("{$project_list[$prj_id]}", {$prj_id});
+  {/foreach}
+  {/if}
+  //-->
+  </script>
+{/block}
+
+{block "manage_content"}
+  <form id="custom_field_form" method="post">
+  {if $smarty.get.cat|default:'' == 'edit'}
+  <input type="hidden" name="cat" value="update">
+  <input type="hidden" name="id" value="{$smarty.get.id|intval}">
+  {else}
+  <input type="hidden" name="cat" value="new">
+  {/if}
+            <table class="bordered">
+              <tr class="title">
+                <th colspan="2">
+                  {t}Manage Custom Fields{/t}
+                </th>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Title{/t}
+                </th>
+                <td>
+                  <input type="text" name="title" maxlength="255" size="40" value="{$info.fld_title|default:''}">
+                  {include file="error_icon.tpl.html" field="title"}
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Short Description{/t}
+                </th>
+                <td>
+                  <input type="text" name="description" maxlength="255" size="40" value="{$info.fld_description|default:''}">
+                  <span>({t}it will show up by the side of the field{/t})</span>
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Assigned Projects{/t}
+                </th>
+                <td>
+                  <select name="projects[]" multiple size="3">
+                  {html_options options=$project_list selected=$info.projects|default:''}
+                  </select>
+                  {include file="error_icon.tpl.html" field="projects[]"}
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Target Forms{/t}
+                </th>
+                <td>
+                  <span>
+                    <label><input type="checkbox" name="report_form" value="1" class="target_form" {if $info.fld_report_form|default:'' == 1}checked{/if}>{t}Report Form{/t}</label><br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label><input type="checkbox" name="report_form_required" value="1" {if $info.fld_report_form_required|default:'' == 1}checked{/if}>{t}Required Field{/t}</label><br />
+                    <label><input type="checkbox" name="anon_form" value="1" class="target_form" {if $info.fld_anonymous_form|default:'' == 1}checked{/if}>{t}Anonymous Form{/t}</label><br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label><input type="checkbox" name="anon_form_required" value="1" {if $info.fld_anonymous_form_required|default:'' == 1}checked{/if}>{t}Required Field{/t}</label><br />
+                    <label><input type="checkbox" name="close_form" value="1" class="target_form" {if $info.fld_close_form|default:'' == 1}checked{/if}>{t}Close Form{/t}</label><br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label><input type="checkbox" name="close_form_required" value="1" {if $info.fld_close_form_required|default:'' == 1}checked{/if}>{t}Required Field{/t}</label><br />
+                    <label><input type="checkbox" disabled checked/>Edit Form</label> (<em>Cannot be removed</em>)</em><br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label><input type="checkbox" name="edit_form_required" value="1" {if $info.fld_edit_form_required|default:'' == 1}checked{/if}>{t}Required Field{/t}</label>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Display on List Issues Page{/t}
+                </th>
+                <td>
+                  <label>
+                      <input type="radio" name="list_display" value="1" {if $info.fld_list_display|default:'' == 1}checked{/if}>
+                       {t}Yes{/t}
+                  </label>
+                  <label>
+                    <input type="radio" name="list_display" value="0" {if $info.fld_list_display|default:'' != 1}checked{/if}>
+                    {t}No{/t}
+                  </label>
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Field Type{/t}
+                </th>
+                <td>
+                  <label>
+                    <input type="radio" name="field_type" value="text" {if $info.fld_type|default:'' == 'text'}checked{/if}/>
+                    {t}Text Input{/t}
+                  </label><br />
+                  <label>
+                    <input type="radio" name="field_type" value="textarea" {if $info.fld_type|default:'' == 'textarea'}checked{/if}/>
+                    {t}Textarea{/t}
+                  </label><br />
+                  <label>
+                    <input type="radio" name="field_type" class="enable_custom_options" value="combo" {if $info.fld_type|default:'' == 'combo'}checked{/if}/>
+                    {t}Combo Box{/t}
+                  </label><br />
+                  <label>
+                    <input type="radio" name="field_type" class="enable_custom_options" value="multiple" {if $info.fld_type|default:'' == 'multiple'}checked{/if}/>
+                    {t}Multiple Combo Box{/t}
+                  </label><br />
+                  <label>
+                    <input type="radio" name="field_type" value="date" {if $info.fld_type|default:'' == 'date'}checked{/if}/>
+                    {t}Date{/t}
+                  </label><br />
+                  <label>
+                    <input type="radio" name="field_type" value="integer" {if $info.fld_type|default:'' == 'integer'}checked{/if} />
+                    {t}Integer{/t}
+                  </label><br />
+                  <label>
+                    <input type="radio" name="field_type" class="enable_custom_options" value="checkbox" {if $info.fld_type|default:'' == 'checkbox'}checked{/if} />
+                    {t}Checkbox{/t}
+                  </label><br />
+
+                  <br />
+                  <div class="warning"><strong>{t}Warning{/t}: {t}Changing field types can result in loss of data.{/t}</strong></div>
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Field Options{/t}
+                </th>
+                <td>
+                  {if $info|default:''}
+                    <a href="custom_field_options.php?fld_id={$info.fld_id}">Edit Options ({$info.field_options|@count})</a>
+                  {else}
+                    <em>You must save the new custom field before editing options.</em>
+                  {/if}
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Order Options By{/t}
+                </th>
+                <td>
+                  <select name="order_by">
+                    {html_options options=$order_by_list selected=$info.fld_order_by|default:'cfo_id ASC'}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th>
+                  {t}Custom Field Backend{/t}
+                </th>
+                <td valign="top">
+                  <select name="custom_field_backend">
+                    <option value="" label="{t}Please select a backend{/t}">{t}Please select a backend{/t}</option>
+                    {html_options options=$backend_list selected=$info.fld_backend|default:''}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Minimum View Role{/t}
+                </th>
+                <td>
+                  <select name="min_role">
+                    {html_options options=$user_roles selected=$info.fld_min_role|default:''}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Minimum Edit Role{/t}
+                </th>
+                <td>
+                  <select name="min_role_edit">
+                    {html_options options=$user_roles selected=$info.fld_min_role_edit|default:''}
+                  </select>
+                  {include file="error_icon.tpl.html" field="min_role_edit"}
+                </td>
+              </tr>
+              <tr>
+                <th width="120">
+                  {t}Rank{/t}
+                </th>
+                <td>
+                  <input type="text" name="rank" value="{$info.fld_rank|default:''}" size="3">
+                </td>
+              </tr>
+              <tr class="buttons">
+                <td colspan="2">
+                  {if $smarty.get.cat|default:'' == 'edit'}
+                  <input type="submit" value="{t}Update Custom Field{/t}">
+                  {else}
+                  <input type="submit" value="{t}Create Custom Field{/t}">
+                  {/if}
+                  <input type="reset" value="{t}Reset{/t}">
+                </td>
+              </tr>
+          </table>
+          </form>
+
+          <form id="delete_form" method="post">
+          <input type="hidden" name="cat" value="delete">
+
+          <table class="bordered grid">
+            <tr class="title">
+              <th colspan="7">
+                {t}Existing Custom Fields{/t}
+              </th>
+            </tr>
+            <tr>
+              <th width="4" nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+              <th nowrap>&nbsp;{t}Rank{/t}</th>
+              <th width="15%">&nbsp;{t}Title{/t}</th>
+              <th width="20%">&nbsp;{t}Assigned Projects{/t}</th>
+              <th width="10%">&nbsp;{t}Min. View Role{/t}</th>
+              <th width="10%">&nbsp;{t}Min. Edit Role{/t}</th>
+              <th width="5%">&nbsp;{t}Type{/t}</th>
+              <th width="50%">&nbsp;{t}Options{/t}</th>
+            </tr>
+            {section name="i" loop=$list}
+            <tr class="{cycle values='odd,even'}">
+              <td width="4" nowrap align="center">
+                <input type="checkbox" name="items[]" value="{$list[i].fld_id}" {if $smarty.section.i.total == 0}disabled{/if}>
+              </td>
+              <td nowrap>
+                {rank_icon href="{$core.rel_url}manage/custom_fields.php?cat=change_rank&id={$list[i].fld_id}&direction=1" direction="down"}
+                {$list[i].fld_rank}
+                {rank_icon href="{$core.rel_url}manage/custom_fields.php?cat=change_rank&id={$list[i].fld_id}&direction=-1" direction="up"}
+              </td>
+              <td width="15%">
+                &nbsp;<a href="{$core.rel_url}manage/custom_fields.php?cat=edit&id={$list[i].fld_id}" title="{t}update this entry{/t}">{$list[i].fld_title}</a>
+              </td>
+              <td width="20%">
+                &nbsp;{$list[i].projects}
+              </td>
+              <td width="10%">
+                &nbsp;{$list[i].min_role_name}
+              </td>
+              <td width="10%">
+                &nbsp;{$list[i].min_role_edit_name}
+              </td>
+              <td width="5%">
+                <nobr>&nbsp;{if $list[i].fld_type == 'combo'}{t}Combo Box{/t}{elseif $list[i].fld_type == 'multiple'}{t}Multiple Combo Box{/t}{elseif $list[i].fld_type == 'textarea'}{t}Textarea{/t}{elseif $list[i].fld_type == 'date'}{t}Date{/t}{elseif $list[i].fld_type == 'integer'}{t}Integer{/t}{elseif $list[i].fld_type == 'checkbox'}Checkbox{else}{t}Text Input{/t}{/if}</nobr>
+              </td>
+              <td width="50%">
+                 {if $list[i].has_options}
+                  &nbsp;<a href="custom_field_options.php?fld_id={$list[i].fld_id}">Edit Options ({$list[i].field_options|@count})</a>
+                 {/if}
+              </td>
+            </tr>
+            {sectionelse}
+            <tr class="no_results">
+              <td colspan="8">
+                {t}No custom fields could be found.{/t}
+              </td>
+            </tr>
+            {/section}
+            <tr class="buttons">
+              <td width="4" align="center">
+                <input type="button" value="{t}All{/t}" class="select_all">
+              </td>
+              <td colspan="7">
+                <input type="submit" value="{t}Delete{/t}">
+              </td>
+            </tr>
+          </table>
+        </form>
+{/block}

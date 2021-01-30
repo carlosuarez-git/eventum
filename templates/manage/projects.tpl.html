@@ -1,0 +1,300 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+<script type="text/javascript">
+<!--
+function validateForm()
+{
+  checkLeadSelection();
+  if (Validation.isFieldWhitespace('title')) {
+      Validation.selectField('title');
+      alert('{t escape=js}Please enter the title of this project.{/t}');
+      return false;
+  }
+  if (!Validation.hasOneSelected('users[]')) {
+      Validation.selectField('users[]');
+      alert('{t escape=js}Please assign the users for this project.{/t}');
+      return false;
+  }
+  if (!Validation.hasOneSelected('statuses[]')) {
+      Validation.selectField('statuses[]');
+      alert('{t escape=js}Please assign the statuses for this project.{/t}');
+      return false;
+  }
+
+  // the selected initial status should be one of the selected assigned statuses
+  if ($.inArray(Eventum.getField('initial_status').val(), Eventum.getField('statuses[]').val()) == -1) {
+      Validation.selectField('initial_status');
+      alert('{t escape=js}Please choose the initial status from one of the assigned statuses of this project.{/t}');
+      return false;
+  }
+  if (!Validation.isEmail(Eventum.getField('outgoing_sender_email').val())) {
+      Validation.selectField('outgoing_sender_email');
+      alert('{t escape=js}Please enter a valid outgoing sender address for this project.{/t}');
+      return false;
+  }
+  if (!Validation.isFieldWhitespace('mail_aliases')) {
+      var aliases = Eventum.getField('mail_aliases').val().split(',');
+      var return_false = false;
+      $.each(aliases, function(index) {
+          if (!Validation.isEmail(this)) {
+              Validation.selectField('mail_aliases');
+              alert('{t escape=js}Please enter a comma separated list of valid mail address aliases for this project{/t}');
+              return_false = true;
+              return false;
+          }
+      });
+      if (return_false) {
+          return false;
+      }
+}
+  return true;
+}
+
+function checkLeadSelection()
+{
+    Eventum.selectOption('users[]', $('select[name=lead_usr_id]').val());
+}
+
+$().ready(function() {
+    $('.select_all').click(function() { Eventum.toggleCheckAll('item[]'); });
+    $('select[name=lead_usr_id]').change(checkLeadSelection);
+    checkLeadSelection();
+
+    $('#project_form').submit(validateForm);
+});
+//-->
+</script>
+
+    <form id="project_form"  method="post">
+    <input type="hidden" name="token" value="{$csrf_token}">
+    <table class="bordered">
+      {if $smarty.get.cat|default:'' == 'edit'}
+      <input type="hidden" name="cat" value="update">
+      <input type="hidden" name="id" value="{$smarty.get.id|intval}">
+      {else}
+      <input type="hidden" name="cat" value="new">
+      {/if}
+      <tr class="title">
+        <th colspan="2">
+          {t}Manage Projects{/t}
+        </th>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Title{/t} *
+        </th>
+        <td width="80%">
+          <input type="text" name="title" size="40" value="{$info.prj_title|default:''|escape:"html"}">
+          {include file="error_icon.tpl.html" field="title"}
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Status{/t} *
+        </th>
+        <td width="80%">
+          <select name="status">
+            <option value="active" {if $info.prj_status|default:'' == 'active'}selected{/if}>{t}Active{/t}</option>
+            <option value="archived" {if $info.prj_status|default:'' == 'archived'}selected{/if}>{t}Archived{/t}</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Customer Integration Backend{/t}
+        </th>
+        <td width="80%">
+          <select name="customer_backend">
+            <option value="">{t}No Customer Integration{/t}</option>
+            {html_options options=$customer_backends selected=$info.prj_customer_backend|default:''}
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Workflow Backend{/t}
+        </th>
+        <td width="80%">
+          <select name="workflow_backend">
+            <option value="">{t}No Workflow Management{/t}</option>
+            {html_options options=$workflow_backends selected=$info.prj_workflow_backend|default:''}
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Project Lead{/t}: *
+        </th>
+        <td width="80%">
+          <select name="lead_usr_id">
+            {html_options options=$user_options selected=$info.prj_lead_usr_id|default:''}
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Users{/t} *
+        </th>
+        <td width="80%">
+          <select name="users[]" multiple size="3">
+            {html_options options=$user_options selected=$info.prj_assigned_users|default:''}
+          </select>
+          {include file="error_icon.tpl.html" field="users[]"}
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Statuses{/t} *
+        </th>
+        <td width="80%">
+          <select name="statuses[]" multiple size="3">
+            {html_options options=$status_options selected=$info.assigned_statuses|default:''}
+          </select>
+          {include file="error_icon.tpl.html" field="statuses[]"}
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Initial Status for New Issues{/t} *
+        </th>
+        <td width="80%">
+          <select name="initial_status">
+            {html_options options=$status_options selected=$info.prj_initial_sta_id|default:''}
+          </select>
+          {include file="error_icon.tpl.html" field="initial_status"}
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Outgoing Email Sender Name{/t}
+        </th>
+        <td width="80%">
+          <input type="text" name="outgoing_sender_name" size="40" value="{$info.prj_outgoing_sender_name|default:''|escape:"html"}">
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Outgoing Email Sender Address{/t} *
+        </th>
+        <td width="80%">
+          <input type="text" name="outgoing_sender_email" size="40" value="{$info.prj_outgoing_sender_email|default:''|escape:"html"}">
+          {include file="error_icon.tpl.html" field="outgoing_sender_email"}
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Email Sender Flag{/t}
+        </th>
+        <td>
+            <input type="text" name="sender_flag" value="{$info.prj_sender_flag|default:''|escape:"html"}"> <br />
+            <span>{t}This will be included in the From address of all emails sent by Eventum for this project and will override any flag set system wide.{/t}</span>
+            <div>
+            <label>
+                <input type="radio" name="flag_location" value="before"
+                    {if $info.prj_sender_flag_location|default:'' == 'before'}checked{/if}>
+                {t}Before Sender Name{/t}
+            </label>
+            <label>
+                <input type="radio" name="flag_location" value="after"
+                    {if $info.prj_sender_flag_location|default:'' != 'before'}checked{/if}>
+                {t}After Sender Name{/t}
+            </label>
+            </div>
+        </td>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Project mail aliases{/t}
+        </th>
+        <td width="80%">
+          <input type="text" name="mail_aliases" size="40" value="{$info.prj_mail_aliases|default:''|escape:"html"}">
+          {include file="error_icon.tpl.html" field="mail_aliases"}
+        </td>
+      </tr>
+      <tr>
+        <th width="120" nowrap>
+          {t}Remote Invocation{/t}
+        </th>
+        <td width="80%">
+            <label>
+                <input type="radio" name="remote_invocation" value="enabled" {if $info.prj_remote_invocation|default:'' == 'enabled'}checked{/if}>
+                {t}Enabled{/t}
+            </label>
+            <label>
+                <input type="radio" name="remote_invocation" value="disabled" {if $info.prj_remote_invocation|default:'' != 'enabled'}checked{/if}>
+                {t}Disabled{/t}
+            </label>
+        </td>
+      </tr>
+      <tr>
+        <th width="120" nowrap>
+          {t}Segregate Reporters{/t} {include file="help_link.tpl.html" topic="segregate_reporter"}
+        </th>
+        <td width="80%">
+            <label>
+                <input type="radio" name="segregate_reporter" value="1" {if $info.prj_segregate_reporter|default:'' == 1}checked{/if}>
+                {t}Yes{/t}
+            </label>
+            <label>
+                <input type="radio" name="segregate_reporter" value="0" {if $info.prj_segregate_reporter|default:'' != 1}checked{/if}>
+                {t}No{/t}
+            </label>
+        </td>
+      </tr>
+      <tr class="buttons">
+        <td colspan="2">
+          {if $smarty.get.cat|default:'' == 'edit'}
+          <input type="submit" value="{t}Update Project{/t}">
+          {else}
+          <input type="submit" value="{t}Create Project{/t}">
+          {/if}
+          <input type="reset" value="{t}Reset{/t}">
+        </td>
+      </tr>
+    </table>
+    </form>
+
+    <table class="bordered grid">
+      <tr class="title">
+        <th colspan="5">
+          {t}Existing Projects{/t}
+        </th>
+      </tr>
+        <tr>
+          <th>{t}Title{/t}</th>
+          <th>{t}Project Lead{/t}</th>
+          <th>{t}Status{/t}</th>
+          <th>{t}Actions{/t}</th>
+        </tr>
+        {section name="i" loop=$list}
+        <tr class="{cycle values='odd,even'}">
+          <td width="30%" >
+            &nbsp;<a href="{$core.rel_url}manage/projects.php?cat=edit&id={$list[i].prj_id}" title="{t}update this entry{/t}">{$list[i].prj_title}</a>
+          </td>
+          <td width="20%" >&nbsp;{$list[i].usr_full_name|escape:html}</td>
+          <td >&nbsp;{$list[i].prj_status|capitalize}</td>
+          <td width="30%"  nowrap>
+            <ul>
+              <li><a href="{$core.rel_url}manage/releases.php?prj_id={$list[i].prj_id}">{t}Edit Releases{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/categories.php?prj_id={$list[i].prj_id}">{t}Edit Categories{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/priorities.php?prj_id={$list[i].prj_id}">{t}Edit Priorities{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/severities.php?prj_id={$list[i].prj_id}">{t}Edit Severities{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/phone_categories.php?prj_id={$list[i].prj_id}">{t}Edit Phone Support Categories{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/time_tracking.php?prj_id={$list[i].prj_id}">{t}Manage Time Tracking Categories{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/anonymous.php?prj_id={$list[i].prj_id}">{t}Anonymous Reporting{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/field_display.php?prj_id={$list[i].prj_id}">{t}Edit Fields to Display{/t}</a></li>
+              <li><a href="{$core.rel_url}manage/column_display.php?prj_id={$list[i].prj_id}">{t}Edit Columns to Display{/t}</a></li>
+            </ul>
+          </td>
+        </tr>
+        {sectionelse}
+        <tr class="no_results">
+          <td colspan="5">
+            {t}No projects could be found.{/t}
+          </td>
+        </tr>
+        {/section}
+    </table>
+{/block}

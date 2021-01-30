@@ -1,0 +1,41 @@
+<div class="issue_section bordered" id="custom_fields">
+    <div class="title">
+        {t}Custom Fields{/t}
+        <span class="menu">
+            [ <a href="#top">{t}Back to Top{/t}</a> ]
+            [ <span class="js_link" id="toggle_custom_fields" >{get_display_label element_name="custom_fields"}</span> ]
+        </span>
+    </div>
+    <div class="content" {get_display_style element_name='custom_fields'}>
+        <table class="grid">
+          {section name="i" loop=$custom_fields}
+          <tr class="{cycle values='odd,even'}" {if $custom_fields[i].hide_when_no_options|default:0 == 1 && $custom_fields[i].value == ''}style="display: none"{/if}>
+            <th class="{if $custom_fields[i].fld_min_role > $core.roles.customer}internal{/if}">
+                {$custom_fields[i].fld_title}
+            </th>
+            <td>
+              {if $custom_fields[i].fld_type == 'textarea'}
+                {$custom_fields[i].value|escape:"html"|activateLinks:"link"|nl2br}
+              {else}
+                {$custom_fields[i].formatted_value}
+              {/if}
+            </td>
+          </tr>
+          {sectionelse}
+          <tr id="custom_fields1" {get_display_style element_name="custom_fields" total=$custom_fields|@count}>
+            <td colspan="2" align="center">
+              <i>{t}No custom fields could be found.{/t}</i>
+            </td>
+          </tr>
+          {/section}
+        </table>
+    </div>
+      {if $issue_access.update and $custom_fields != "" }
+      <form method="get" action="update.php">
+      <input type="hidden" name="id" value="{$issue.iss_id}">
+      <div class="buttons">
+          <input type="submit" value="{t}Update Issue{/t}">
+      </div>
+      </form>
+      {/if}
+</div>

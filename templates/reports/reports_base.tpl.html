@@ -1,0 +1,30 @@
+{extends "base_full.tpl.html"}
+
+{block "title"}{t}Reports{/t}{/block}
+
+{block "content"}
+        <div id="report_sidebar">
+            <ul>
+                <li>{t}Issues{/t}
+                    <ul>
+                        <li><a href="issue.php?cat=user">{t}Issues by User{/t}</a></li>
+                        <li><a href="open_issues.php">{t}Open Issues By Assignee{/t}</a></li>
+                        <li><a href="open_issues.php?group_by_reporter=1">{t}Open Issues By Reporter{/t}</a></li>
+                    </ul>
+                </li>
+                <li><a href="weekly.php">{t}Weekly Report{/t}</a></li>
+                <li><a href="workload_time_period.php">{t}Workload by time period{/t}</a></li>
+                <li><a href="workload_time_period.php?type=email">{t}Email by time period{/t}</a></li>
+                <li><a href="custom_fields.php">{t}Custom Fields{/t}</a></li>
+                <li><a href="custom_fields_weekly.php">{t}Custom Fields Weekly Report{/t}</a></li>
+                <li><a href="recent_activity.php">{t}Recent Activity{/t}</a></li>
+                <li><a href="workload_date_range.php">{t}Workload By Date Range{/t}</a></li>
+                <li><a href="stalled_issues.php">{t}Stalled Issues{/t}</a></li>
+                <li><a href="estimated_dev_time.php">{t}Estimated Development Time{/t}</a></li>
+                <li><a href="category_statuses.php">{t}Categories and Statuses{/t}</a></li>
+            </ul>
+        </div>
+        <div id="report_content">
+        {block "report_content"}{/block}
+        </div>
+{/block}

@@ -1,0 +1,66 @@
+<div class="issue_section bordered" id="attachments">
+    <div class="title">
+        {t}Attached Files{/t} ({$files|@count})
+        <span class="menu">
+            [ <a href="#top">{t}Back to Top{/t}</a> ]
+            [ <span class="js_link" id="toggle_attachments" >{get_display_label element_name="attachments" total=$files|@count}</span> ]
+        </span>
+    </div>
+
+    <div class="content" {get_display_style element_name='attachments' total=$files|@count}>
+        <table class="grid">
+          <tr>
+            <th>{t}Files{/t}</th>
+            <th>{t}Owner{/t}</th>
+            {if $core.current_role > $core.roles.customer}
+            <th>{t}Minimum Role{/t}</th>
+            {/if}
+            <th>{t}Date{/t}</th>
+            <th>{t}Description{/t}</th>
+          </tr>
+          {foreach from=$files item=attachment}
+          <tr class="{cycle values='odd,even'}">
+            <td>
+              {foreach from=$attachment.files item=file}
+              <i class="fa fa-file-o" aria-hidden="true"></i>
+              <a title="{t}download file{/t} ({$file.iaf_filename|escape:"html"} - {$file.iaf_filesize})" href="download.php?cat=attachment&id={$file.iaf_id}">{$file.iaf_filename|escape:"html"}</a> ({$file.iaf_filesize})
+              <a class="link" title="{t}view{/t} ({$file.iaf_filename|escape:"html"}" href="download.php?cat=attachment&id={$file.iaf_id}&force_inline=1">{t}view{/t}</a>
+              {if $core.user.usr_id == $attachment.iat_usr_id OR $core.current_role >= $core.roles.manager}
+              <span title="{t}delete file{/t}" data-iaf-id="{$file.iaf_id}" class="js_link delete_file">{t}delete{/t}</span>{/if}
+              <br />
+              {/foreach}
+            </td>
+            <td width="15%" nowrap>
+              {$attachment.usr_full_name|escape:"html"}
+              {if $core.user.usr_id == $attachment.iat_usr_id OR $core.current_role >= $core.roles.manager}
+                [ <span title="{t}delete attachment{/t}" class="js_link delete_attachment" data-iat-id="{$attachment.iat_id}">{t}delete{/t}</span> ]{/if}
+            </td>
+            {if $core.current_role > $core.roles.customer}
+            <td width="5%" align="center">
+              {if $attachment.iat_min_role >= $core.roles.standard_user}
+                <span style="color: red;">{$attachment.min_role_name}</span>
+              {else}
+                {$attachment.min_role_name}
+              {/if}
+            </td>
+            {/if}
+            <td width="15%" nowrap>{$attachment.iat_created_date|timeago}</td>
+            <td width="45%">{$attachment.iat_description}</td>
+          </tr>
+          {foreachelse}
+          <tr class="no_results">
+            <td colspan="{if $core.current_role > $core.roles.customer}5{else}4{/if}">
+              {t}No attachments could be found.{/t}
+            </td>
+          </tr>
+          {/foreach}
+        </table>
+    </div>
+      {if $core.current_role > $core.roles.viewer}
+      <form>
+      <div class="buttons">
+          <input type="button" value="{t}Upload File{/t}" id='upload_file' data-issue-id="{$issue_id}">
+      </div>
+      </form>
+      {/if}
+</div>

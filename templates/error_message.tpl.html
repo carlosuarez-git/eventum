@@ -1,0 +1,13 @@
+{if $is_popup}
+  {assign var="base_template" value="base.tpl.html"}
+{else}
+  {assign var="base_template" value="base_full.tpl.html"}
+{/if}
+{extends "$base_template"}
+{block title}{t}Error{/t}{/block}
+
+{block "content"}
+  {if !$is_popup}
+    &nbsp;<a href="javascript:history.go(-1);">{t}Go Back{/t}</a>
+  {/if}
+{/block}

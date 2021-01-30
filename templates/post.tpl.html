@@ -1,0 +1,119 @@
+{extends "base.tpl.html"}
+{block "page_classes"}anon_post CustomField GrowingFileField{/block}
+
+{block name="content"}
+<div class="note_box">
+    <a href="{$core.rel_url}">{t}Back to Login Form{/t}</a>
+</div>
+
+{if not $projects|@count}
+<div class="note_box">
+    {t}Sorry, but there are no projects currently setup as allowing anonymous posting.{/t}
+</div>
+{else}
+{if $new_issue_id|default:'' != "" and $smarty.post.report_stays|default:'' != "yes"}
+<div class="note_box">
+    {t escape=no 1=$new_issue_id}Thank you, the new issue was created successfully. For your records, the new issue ID is <font color="red">%1</font>{/t}
+    <br /><br />
+    {t 1="{$core.rel_url}new.php" escape=no}You may <a href="%1">submit another issue</a> if you so wish.{/t}
+</div>
+{else}
+{if $smarty.get.post_form|default:'' != 'yes'}
+<form id="project_form" method="get" onSubmit="return validateForm(this);">
+    <input type="hidden" name="post_form" value="yes">
+    <table class="bordered two_column narrow">
+        <tr class="title">
+            <th colspan="2">
+                {t}Report New Issue{/t}
+            </th>
+        </tr>
+        <tr>
+            <th width="150">
+                {t}Project{/t}: *
+            </th>
+            <td>
+                <select name="project">
+                    <option value="-1">{t}Please choose a project{/t}</option>
+                    {html_options options=$projects}
+                </select>
+                {include file="error_icon.tpl.html" field="project"}
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                <input type="submit" value="{t}Next{/t} &gt;&gt;">&nbsp;&nbsp;
+            </td>
+        </tr>
+    </table>
+</form>
+{else}
+<form id="report_form" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="cat" value="report">
+    {assign var="tabindex" value=1}
+    <table class="bordered two_column">
+        <tr class="title">
+            <th colspan="2">
+                {t}Report New Issue{/t}
+            </th>
+        </tr>
+        <tr>
+            <th width="150">
+                {t}Project{/t}:
+            </th>
+            <td>
+                {$project_name}
+                <input type="hidden" name="project" value="{$smarty.get.project}">
+            </td>
+        </tr>
+        <tr>
+            <th width="150">
+                {t}Summary{/t}: *
+            </th>
+            <td>
+                <input type="text" name="summary" size="60" tabindex="{$tabindex++}">
+                {include file="error_icon.tpl.html" field="summary"}
+            </td>
+        </tr>
+        <tr>
+            <th width="150">
+                {t}Description{/t}: *
+            </th>
+            <td>
+                <textarea name="description" style="width: 97%" rows="10" tabindex="{$tabindex++}"></textarea>
+                {include file="error_icon.tpl.html" field="description"}
+            </td>
+        </tr>
+        {include file="edit_custom_fields.tpl.html" custom_fields=$custom_fields|default:'' form_type='anonymous'}
+        {assign var=tabindex value=$tabindex+50}
+        <tr>
+            <th width="150">
+                {t}Attach Files{/t}:
+            </th>
+            <td>
+                <table width="100%" cellpadding="2" cellspacing="0" id="file_table">
+                    <tr>
+                        <td>
+                            <input type="file" name="file[]" size="40" class="growing_file_field" tabindex="{$tabindex++}"}>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                <input type="submit" value="{t}Submit{/t}" tabindex="{$tabindex++}">&nbsp;&nbsp;
+                <input type="reset" value="{t}Reset{/t}" tabindex="{$tabindex++}">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                * {t}Required fields{/t}
+            </td>
+        </tr>
+    </table>
+</form>
+{/if}
+{/if}
+{/if}
+
+{/block}

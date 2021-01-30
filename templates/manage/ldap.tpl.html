@@ -1,0 +1,134 @@
+{extends "manage/manage.tpl.html"}
+
+{block "javascripts" append}
+<script type="text/javascript">
+    function validateForm()
+    {
+        if (Validation.isFieldWhitespace('host')) {
+            alert('{t escape=js}Please enter the LDAP Host.{/t}');
+            Validation.selectField('host');
+            return false;
+        }
+        var field = Eventum.getField('port');
+        if (Validation.isWhitespace(field.val()) || (!Validation.isNumberOnly(field.val()))) {
+            alert('{t escape=js}Please enter the LDAP port.{/t}');
+            Validation.selectField('port');
+            return false;
+        }
+        if (Validation.isFieldWhitespace('basedn')) {
+            alert('{t escape=js}Please enter the base dn.{/t}');
+            Validation.selectField('basedn');
+            return false;
+        }
+        if (Validation.isFieldWhitespace('userdn')) {
+            alert('{t escape=js}Please enter the user dn.{/t}');
+            Validation.selectField('userdn');
+            return false;
+        }
+        return true;
+    }
+
+    $().ready(function() {
+        $('#ldap_form').submit(validateForm);
+    })
+</script>
+{/block}
+
+{function name="table_row" title="" field="" size="50" help="" type="text"}
+  <tr>
+    <th width="120">
+      {$title}:
+    </th>
+    <td>
+      {if $type == "password"}
+        <input type="password" name="{$field}" size="{$size}" value="">
+      {else}
+        <input type="text" name="{$field}" size="{$size}" value="{$setup.$field|escape:"html"|default:''}">
+      {/if}
+      {if $help}
+        <span>{$help}</span>
+      {/if}
+      {include file="error_icon.tpl.html" field=$field}
+    </td>
+  </tr>
+{/function}
+
+{block "manage_content"}
+  {if $ldap_auth}
+    <form id="ldap_form" method="post">
+    <input type="hidden" name="cat" value="update">
+    <table class="bordered">
+        <tr class="title">
+            <th colspan="2">
+                {t}LDAP Setup{/t} {include file="help_link.tpl.html" topic="ldap"}
+            </th>
+        </tr>
+        {table_row field="host" title="{t}Host{/t}"}
+        {table_row field="port" title="{t}Port{/t}" size="5" help="{t}(default: 389 for LDAP/StartTLS, 636 for LDAPS){/t}"}
+        <tr>
+          <th width="120">
+            {t}Encryption{/t}:
+          </th>
+          <td>
+            <select name="encryption">
+              <option value="none" {if $setup.encryption == "none"}selected{/if}>None</option>
+              <option value="ssl" {if $setup.encryption == "ssl"}selected{/if}>LDAPS</option>
+              <option value="tls" {if $setup.encryption == "tls"}selected{/if}>StartTLS</option>
+            </select>
+            {include file="error_icon.tpl.html" field="encryption"}
+          </td>
+        </tr>
+        {table_row field="binddn" title="{t}Bind DN{/t}" help="{t}Leave empty to clear saved Bind PW{/t}"}
+        {table_row field="bindpw" title="{t}Bind PW{/t}" type="password" help="{t}Leave empty to keep current password{/t}"}
+        {table_row field="basedn" title="{t}Base DN{/t}"}
+        {table_row field="user_id_attribute" title="{t}User ID attribute{/t}" help="{t}LDAP attribute containing a unique user identifier (default: 'uid'){/t}"}
+        {table_row field="userdn" title="{t}User DN{/t}" help="{t}Use %UID% to specify where the UID should be substituted.{/t}"}
+        {table_row field="user_filter" title="{t}User Filter{/t}" help="{t}Optional filter when binding the user{/t}"}
+        {table_row field="customer_id_attribute" title="{t}Customer ID attribute{/t}"}
+        {table_row field="contact_id_attribute" title="{t}Contact ID attribute{/t}"}
+        {table_row field="active_dn" title="{t}DN for active users{/t}" help="{t}ldapsync: DN to search for active users{/t}"}
+        {table_row field="inactive_dn" title="{t}DN for inactive users{/t}" help="{t}ldapsync: DN to search for inactive users{/t}"}
+        <tr>
+            <th width="120">
+                {t}Create Users{/t}:
+            </th>
+            <td>
+                <label><input type="radio" name="create_users" value="1" {if $setup.create_users == 1}checked{/if} />Yes</label>
+                <label><input type="radio" name="create_users" value="0" {if $setup.create_users != 1}checked{/if} />No</label>
+                {include file="error_icon.tpl.html" field="create_users"}
+            </td>
+        </tr>
+        <tr>
+            <th width="120">
+                {t}Default Roles{/t}:
+            </th>
+            <td>
+                <table border="0">
+                    {foreach from=$project_list key=prj_id item=prj_name}
+                    <tr>
+                        <td>{$prj_name}:</td>
+                        <td>
+                            <select name="default_role[{$prj_id}]">
+                                {html_options options=$project_roles selected=$setup.default_role.$prj_id}
+                            </select>
+                            {include file="error_icon.tpl.html" field="default_role[$prj_id]"}
+                        </td>
+                    </tr>
+                    {/foreach}
+                </table>
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                <input class="button" type="submit" value="{t}Update Setup{/t}">
+                <input class="button" type="reset" value="{t}Reset{/t}">
+            </td>
+        </tr>
+    </table>
+</form>
+{else}
+<div>
+    This page is only used for the ldap backend.
+</div>
+{/if}
+{/block}

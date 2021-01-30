@@ -1,0 +1,160 @@
+{extends "base.tpl.html"}
+{block "title"}#{$issue_id} - Add Phone Entry{/block}
+
+{block "content"}
+
+{if $add_phone_result|default:'' != ''}
+    <br />
+    <center>
+        <span><b>
+    {if $add_phone_result == -1}
+        {t}An error occurred while trying to run your query{/t}
+    {elseif $add_phone_result == 1}
+        {t}Thank you, the phone entry was added successfully.{/t}
+    {/if}
+        </b>
+    </span>
+    </center>
+    <script type="text/javascript">
+    <!--
+    {if $core.current_user_prefs.close_popup_windows}
+    setTimeout('Eventum.close_and_refresh()', 2000);
+    {/if}
+    //-->
+    </script>
+    <br />
+    {if not $core.current_user_prefs.close_popup_windows}
+    <center>
+      <span><a href="javascript:void(null);" onClick="Eventum.close_and_refresh();">{t}Continue{/t}</a></span>
+    </center>
+    {/if}
+{else}
+<script type="text/javascript">
+<!--
+function validatePhoneSupportForm(f)
+{
+    if (!Validation.isValidDate('date')) {
+        alert('{t escape=js}Please select a valid date for when the phone call took place.{/t}');
+        return false;
+    }
+    if ((Validation.isFieldWhitespace('call_length')) || (!Validation.isNumberOnly(Eventum.getField('call_length').val()))) {
+        Validation.selectField('call_length');
+        alert('{t escape=js}Please enter integers (or floating point numbers) on the time spent field.{/t}');
+        return false;
+    }
+    if (Validation.isFieldWhitespace('description')) {
+        Validation.selectField('description');
+        alert('{t escape=js}Please enter the description for this new phone support entry.{/t}');
+        return false;
+    }
+    if (Eventum.getField('phone_category').val() == -1) {
+        Validation.selectField('phone_category');
+        alert('{t escape=js}Please choose the category for this new phone support entry.{/t}');
+        return false;
+    }
+    return true;
+}
+$().ready(function() {
+    Eventum.updateTimeFields('add_phone_form', 'date[Year]', 'date[Month]', 'date[Day]', 'date[Hour]', 'date[Minute]');
+
+   $('#add_phone_form').garlic({
+      getPath: function ( $elem ) {
+          var form = $elem.parents('form');
+          var field_keys = [form.find('input[name=issue_id]').val(), $elem.attr('name')];
+          return field_keys.join('_');
+      }
+   });
+});
+//-->
+</script>
+
+      <form name="add_phone_form" id="add_phone_form" onSubmit="return validatePhoneSupportForm(this);" method="post" data-persist="garlic">
+          <input type="hidden" name="cat" value="add_phone">
+          <input type="hidden" name="issue_id" value="{$issue_id}">
+            <table class="bordered">
+              {if $core.current_role > $core.roles.customer}
+              <tr class="title">
+                <th colspan="2">{t}Record Phone Call{/t}</th>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Date of Call{/t}</th>
+                <td width="100%">
+                  {html_select_date start_year='-1' day_value_format='%02d' field_array='date' prefix='' all_extra=''}&nbsp;
+                  {html_select_time minute_interval=5 field_array='date' prefix='' all_extra='' display_seconds=false}
+                  <a href="javascript:void(null);" onClick="updateTimeFields('add_phone_form', 'date[Year]', 'date[Month]', 'date[Day]', 'date[Hour]', 'date[Minute]');">
+                    <i class="fa fa-refresh" aria-hidden="true"></i>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Reason{/t}</th>
+                <td width="100%">
+                  <select name="phone_category">
+                    {html_options options=$phone_categories selected=5}
+                  </select>
+                  {include file="error_icon.tpl.html" field="phone_category"}
+                </td>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Call From{/t}</th>
+                <td width="100%">
+                  <input type="text" name="from_lname" value="{t}last name{/t}" onFocus="if (this.value == 'last name') this.value='';"><span>,</span>
+                  <input type="text" name="from_fname" value="{t}first name{/t}" onFocus="if (this.value == 'first name') this.value='';">
+                </td>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Call To{/t}</th>
+                <td width="100%">
+                  <input type="text" name="to_lname" value="{t}last name{/t}" onFocus="if (this.value == 'last name') this.value='';"><span>,</span>
+                  <input type="text" name="to_fname" value="{t}first name{/t}" onFocus="if (this.value == 'first name') this.value='';">
+                </td>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Type{/t}</th>
+                <td width="100%">
+                  <select name="type">
+                    <option value="incoming">{t}Incoming{/t}</option>
+                    <option value="outgoing">{t}Outgoing{/t}</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Customer Phone Number{/t}</th>
+                <td width="100%">
+                  <input type="text" size="20" maxlength="32" name="phone_number">
+                  {include file="error_icon.tpl.html" field="phone_number"}
+                  <select name="phone_type">
+                    <option value="office">{t}Office{/t}</option>
+                    <option value="home">{t}Home{/t}</option>
+                    <option value="mobile">{t}Mobile{/t}</option>
+                    <option value="temp">{t}Temp Number{/t}</option>
+                    <option value="other">{t}Other{/t}</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Time Spent{/t}</th>
+                <td width="100%"><input type="text" size="5" name="call_length"> {include file="error_icon.tpl.html" field="call_length"} <span><i>({t}in minutes{/t})</i></span></td>
+              </tr>
+              <tr>
+                <th width="190" nowrap>{t}Description{/t}</th>
+                <td>
+                  <a class="white_link" href="javascript:void(null);" onClick="Eventum.hidePreview('#description', '#preview')">{t}[Write]{/t}</a>
+                  <a class="white_link" href="javascript:void(null);" onClick="Eventum.showPreview('#description', '#preview', { issue_id: {$issue_id|intval} })">{t}[Preview]{/t}</a>
+                  <a class="white_link" href="https://commonmark.org/help/" target="_blank">{t}[Markdown Help]{/t}</a>
+                  <textarea id="description" name="description" rows="8" style="width: 97%"></textarea>
+                  {include file="error_icon.tpl.html" field="description"}
+                  <div id="preview" style="width: 97%"></div>
+                </td>
+              </tr>
+              <tr class="buttons">
+                <td colspan="2">
+                  <input type="submit" value="{t}Save Phone Call{/t}">
+                  <input name="cancel" type="reset" value="{t}Cancel{/t}" onClick="window.close();">
+                </td>
+              </tr>
+              {/if}
+            </table>
+      </form>
+{/if}
+{/block}

@@ -1,0 +1,129 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+<script type="text/javascript">
+<!--
+function validateForm() {
+  var field1;
+
+  field1 = Eventum.getField('diskcheck[status]').filter(":checked").val();
+  if (field1 == 'enabled' && Validation.isFieldWhitespace("diskcheck[partition]")) {
+    alert('{t escape=js}Please fill proper partition path{/t}');
+    Validation.selectField('diskcheck[partition]');
+    return false;
+  }
+  return true;
+}
+
+function disableDiskcheckFields()
+{
+    if (Eventum.getField('diskcheck[status]').filter(":checked").val() != 'enabled') {
+        var bgcolor = '#CCCCCC';
+        var disabled = true;
+    } else {
+        var bgcolor = '#FFFFFF';
+        var disabled = false;
+    }
+    Eventum.getField('diskcheck[partition]').prop('disabled', disabled).css('backgroundColor', bgcolor);
+}
+
+  $().ready(function() {
+      $('#custom_field_form').submit(validateForm);
+
+      disableDiskcheckFields();
+      Eventum.getField('diskcheck[status]').click(function(e) { disableDiskcheckFields(); });
+  });
+//-->
+</script>
+
+<form name="monitor_setup_form" onSubmit="return validateForm(this);" method="post">
+<input type="hidden" name="cat" value="update">
+  <table class="bordered">
+    <tr class="title">
+        <th colspan="2">
+          {t}Monitor Setup{/t}
+        </th>
+    </tr>
+    <tr>
+    <th width="120">
+      {t}Check Disk Space{/t}
+    </th>
+    <td>
+      <table>
+      <tr>
+        <td colspan="2">
+        <input type="radio" name="diskcheck[status]" value="enabled" id="diskcheck[status].enabled" {if $setup.monitor.diskcheck.status|default:'' == 'enabled'}checked{/if}>
+        <label for="diskcheck[status].enabled">
+          {t}Enabled{/t}
+        </label>
+        &nbsp;&nbsp;
+        <input type="radio" name="diskcheck[status]" value="disabled" id="diskcheck[status].disabled" {if $setup.monitor.diskcheck.status|default:'' != 'enabled'}checked{/if}>
+        <label for="diskcheck[status].disabled">
+          {t}Disabled{/t}
+        </label>
+        </td>
+      </tr>
+      <tr>
+        <td width="100" align="right">
+        {t}Partition{/t}:&nbsp;
+        </td>
+        <td width="80%">
+        <input type="text" name="diskcheck[partition]" value="{$setup.monitor.diskcheck.partition|default:''}">
+        {include file="error_icon.tpl.html" field="diskcheck[partition]"}
+        <span>{t escape=no 1="/"}(default %1){/t}</span>
+        </td>
+      </tr>
+      </table>
+    </td>
+    </tr>
+
+    <tr>
+    <th width="120">
+      {t}Check Paths{/t}
+    </th>
+    <td>
+      <table>
+      <tr>
+        <td width="120">
+        {html_radios name='paths[status]' options=$enable_disable selected=$setup.monitor.paths.status separator='<br/>'}
+        </td>
+        <td>
+          <span>
+          {t}Whether to check permissions of directories and config files.{/t}
+          </span><br />
+        </td>
+      </tr>
+      </table>
+    </td>
+    </tr>
+
+    <tr>
+    <th width="120">
+      {t}Check IRC Bot{/t}
+    </th>
+    <td>
+      <table>
+      <tr>
+        <td width="120">
+        {html_radios name='ircbot[status]' options=$enable_disable selected=$setup.monitor.ircbot.status separator='<br/>'}
+        </td>
+        <td>
+          <span>
+          {t}Whether to check if IRC Bot is running.{/t}
+          </span><br />
+        </td>
+      </tr>
+      </table>
+    </td>
+    </tr>
+
+    <tr class="buttons">
+    <td colspan="2">
+      <input type="submit" value="{t}Update Setup{/t}">
+      <input type="reset" value="{t}Reset{/t}">
+    </td>
+  </tr>
+  </table>
+</form>
+{/block}

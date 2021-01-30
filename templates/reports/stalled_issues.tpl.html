@@ -1,0 +1,93 @@
+{extends "reports/reports_base.tpl.html"}
+{block "title"}{t}Stalled Issues{/t}{/block}
+
+{block "report_content"}
+<h3 align="center">
+    {t}Stalled Issues Report{/t}
+</h3>
+<form method="post" name="recent_activity">
+    <input type="hidden" name="cat" value="generate">
+    <table class="bordered filters">
+        <tr id="start_row">
+            <th width="40%" align="center" nowrap colspan="2">
+                {t}Show Issues with no Response Between{/t}
+            </th>
+        </tr>
+        <tr id="start_row">
+            <td width="600%" nowrap colspan="2" align="center">
+                {html_select_date time=$after_date prefix="" field_array="after" start_year="-2" end_year="+1" field_order="YMD" month_format="%b" all_extra="class='default'"}
+                <span> and </span>
+                {html_select_date time=$before_date prefix="" field_array="before" start_year="-2" end_year="+1" field_order="YMD" month_format="%b" all_extra="class='default'"}
+            </td>
+        </tr>
+        <tr>
+            <th width="30%" align="center">
+                {t}Developers{/t}:
+            </th>
+            <td width="70%">
+                <select name="developers[]" multiple size="5" style="width: 100%">
+                    {html_options options=$users selected=$developers}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th width="30%" align="center">
+                {t}Status{/t}:
+            </th>
+            <td width="70%">
+                <select name="status[]" multiple size="5" style="width: 100%">
+                    {html_options options=$status_list selected=$status}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th align="center">
+                {t}Sort Order{/t}:
+            </th>
+            <td>
+                <select name="sort_order" style="width: 100%">
+                    <option value="ASC" label="{t}Ascending{/t}" {if $sort_order != 'DESC'}selected{/if}>{t}Ascending{/t}</option>
+                    <option value="DESC" label="{t}Descending{/t}" {if $sort_order == 'DESC'}selected{/if}>{t}Descending{/t}</option>
+                </select>
+            </td>
+        </tr>
+        <tr class="buttons">
+            <td colspan="2">
+                <input type="submit" value="{t}Generate{/t}">
+            </td>
+        </tr>
+    </table>
+</form>
+
+{foreach key=user_full_name item=assigned_issues from=$data}
+<h4>{$user_full_name|escape:"html"}</h4>
+<table class="bordered">
+    <tr>
+        <th rowspan="2" align="center">{t}Issue ID{/t}</th>
+        <th rowspan="2" align="center">{t}Summary{/t}</th>
+        <th rowspan="2" align="center">{t}Status{/t}</th>
+        <th rowspan="2" align="center">{t}Time Spent{/t}</th>
+        <th rowspan="2" align="center">{t}Created{/t}</th>
+        <th rowspan="2" align="center">{t}Last Response{/t}</th>
+        <th colspan="2" align="center">{t}Days and Hours Since{/t}</th>
+    </tr>
+    <tr>
+        <td align="center">{t}Last Update{/t}</td>
+        <td align="center">{t}Last Outgoing Msg{/t}</td>
+    </tr>
+    {foreach key=issue_id item=issue from=$assigned_issues}
+    <tr>
+        <td bgcolor="{$issue.status_color}" align="center"><a target="_top" href="{$core.rel_url}view.php?id={$issue_id}" title="{t}view issue details{/t}">{$issue_id}</a></td>
+        <td bgcolor="{$issue.status_color}"><a target="_top" href="{$core.rel_url}view.php?id={$issue_id}" title="{t}view issue details{/t}">{$issue.iss_summary|escape:"html"}</a></td>
+        <td bgcolor="{$issue.status_color}" align="center">{$issue.sta_title|escape:"html"}</td>
+        <td bgcolor="{$issue.status_color}" align="center">{$issue.time_spent}</td>
+        <td bgcolor="{$issue.status_color}" align="center">{$issue.iss_created_date|timeago}</td>
+        <td bgcolor="{$issue.status_color}" align="center">{$issue.iss_last_response_date|timeago}</td>
+        <td bgcolor="{$issue.status_color}" align="center">{$issue.last_update}</td>
+        <td bgcolor="{$issue.status_color}" align="center">{$issue.last_email_response}</td>
+    </tr>
+    {/foreach}
+</table>
+<br />
+{/foreach}
+{/block}

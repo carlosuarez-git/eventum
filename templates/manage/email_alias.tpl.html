@@ -1,0 +1,101 @@
+{extends "base.tpl.html"}
+
+{block "title"}{t}Email Aliases for {$username|escape:"html"}{/t}{/block}
+
+{block "content"}
+
+<script type="text/javascript">
+<!--
+function validateForm()
+{
+    if (!Validation.isEmail(Eventum.getField('alias').val().trim())) {
+        alert('{t escape=js}Please enter a valid email address.{/t}');
+        return false;
+    }
+    return true;
+}
+function removeEmails()
+{
+    if (!Validation.hasOneChecked('item[]')) {
+        alert('{t escape=js}Please choose which aliases need to be removed.{/t}');
+        return false;
+    }
+    if (!confirm('{t escape=js}WARNING: This action will permanently remove the selected email aliases from the email account.{/t}')) {
+        return false;
+    }
+    return true;
+}
+
+  $().ready(function() {
+      $('#save_form').submit(validateForm);
+      $('.select_all').click(function() { Eventum.toggleCheckAll('item[]'); });
+
+      $('#delete_form').submit(removeEmails);
+  });
+//-->
+</script>
+
+       <h3>{t}Email Aliases for {$username|escape:"html"}{/t}</h3>
+
+        <form id="save_form" method="post">
+        <input type="hidden" name="cat" value="save">
+        <input type="hidden" name="id" value="{$id}">
+      <table class="bordered">
+        <tr class="title"><th colspan="2">{t}New Alias{/t}</th></tr>
+        <tr>
+            <th>
+                {t}Alias{/t}
+            </th>
+            <td>
+                <input type="text" name="alias" size="50" value="">
+            </td>
+        </tr>
+        <tr class="buttons">
+          <td colspan="2">
+            <input type="submit" value="{t}Save{/t}">
+          </td>
+		</tr>
+      </table>
+	  </form>
+
+            <form method="post" id="delete_form">
+            <input type="hidden" name="cat" value="remove">
+            <input type="hidden" name="id" value="{$id}">
+      <table class="bordered grid">
+          <tr class="title">
+              <th colspan="2">Existing Aliases</th>
+          </tr>
+              <tr>
+                <th width="1%">
+                  <input type="button" value="{t}All{/t}" class="select_all">
+                </th>
+                <th width="50%">{t}Email Alias{/t}</th>
+              </tr>
+              {section name="i" loop=$list}
+              <tr class="{cycle values='odd,even'}">
+                <td width="1%" align="center">
+                  <input type="checkbox" name="item[]" value="{$list[i]}">
+                </td>
+                <td width="50%">
+                  {$list[i]|escape:"html"}
+                </td>
+              </tr>
+              {sectionelse}
+              <tr class="no_results">
+                <td colspan="2">
+                  {t}No aliases could be found.{/t}
+                </td>
+              </tr>
+              {/section}
+              <tr class="buttons">
+                <td width="1%" align="center">
+                  <input type="button" value="{t}All{/t}" class="select_all">
+                </td>
+                <td colspan="3">
+                  <input type="submit" value="{t}Delete Alias{/t}">
+                  <input type="button" value="{t}Close{/t}" class="close_window">
+                </td>
+              </tr>
+            </table>
+            </form>
+{/block}

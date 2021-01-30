@@ -1,0 +1,124 @@
+{extends "manage/manage.tpl.html"}
+
+{block "manage_content"}
+
+      <script type="text/javascript">
+      <!--
+      function validateForm()
+      {
+          if (Validation.isFieldWhitespace('title')) {
+              alert('{t escape=js}Please enter the title of this resolution.{/t}');
+              Validation.selectField('title');
+              return false;
+          }
+          if (Validation.isFieldWhitespace('rank')) {
+              alert('{t escape=js}Please enter the rank of this resolution.{/t}');
+              Validation.selectField('rank');
+              return false;
+          }
+          return true;
+      }
+      function checkDelete()
+      {
+          if (!Validation.hasOneChecked('items[]')) {
+              alert('{t escape=js}Please select at least one of the resolutions.{/t}');
+              return false;
+          }
+          if (!confirm('{t escape=js}This action will remove the selected entries.{/t}')) {
+              return false;
+          } else {
+              return true;
+          }
+      }
+      $().ready(function() {
+          $('#resolution_form').submit(validateForm);
+          $('.select_all').click(function() { Eventum.toggleCheckAll('items[]'); });
+
+          $('#delete_form').submit(checkDelete);
+      });
+      //-->
+      </script>
+
+      <form id="resolution_form" method="post">
+      {if $smarty.get.cat|default:'' == 'edit'}
+      <input type="hidden" name="cat" value="update">
+      <input type="hidden" name="id" value="{$smarty.get.id|default:''|intval}">
+      {else}
+      <input type="hidden" name="cat" value="new">
+      {/if}
+    <table class="bordered">
+      <tr class="title">
+        <th colspan="2">
+          {t}Manage Issue Resolutions{/t}
+        </th>
+      </tr>
+      <tr>
+        <th width="120">
+          {t}Title{/t}:
+        </th>
+        <td>
+          <input type="text" name="title" size="40" value="{$info.res_title|default:''}">
+          {include file="error_icon.tpl.html" field="title"}
+        </td>
+      </tr>
+        <tr>
+          <th width="140">
+            {t}Rank{/t}
+          </th>
+          <td>
+            <input type="text" name="rank" size="5" class="default" value="{$info.res_rank|default:''}">
+            {include file="error_icon.tpl.html" field="rank"}
+          </td>
+        </tr>
+      <tr class="buttons">
+        <td colspan="2" >
+          {if $smarty.get.cat|default:'' == 'edit'}
+          <input type="submit" value="{t}Update Resolution{/t}">
+          {else}
+          <input type="submit" value="{t}Create Resolution{/t}">
+          {/if}
+          <input type="reset" value="{t}Reset{/t}">
+        </td>
+      </tr>
+      </table>
+      </form>
+
+      <form id="delete_form" method="post">
+      <input type="hidden" name="cat" value="delete">
+      <table class="bordered">
+      <tr class="title">
+        <th colspan="3">
+          {t}Existing Resolutions{/t}:
+        </th>
+      </tr>
+      <tr>
+          <th width="4" nowrap><input type="button" value="{t}All{/t}" class="select_all"></th>
+          <th>{t}Rank{/t}</th>
+          <th width="100%">&nbsp;{t}Title{/t}</th>
+        </tr>
+        {section name="i" loop=$list}
+        <tr class="{cycle values='odd,even'}">
+          <td width="4" nowrap align="center"><input type="checkbox" name="items[]" value="{$list[i].res_id}"></td>
+          <td align="center">{$list[i].res_rank}</td>
+          <td width="100%">
+            &nbsp;<a href="{$core.rel_url}manage/resolution.php?cat=edit&id={$list[i].res_id}" title="{t}update this entry{/t}">{$list[i].res_title}</a>
+          </td>
+        </tr>
+        {sectionelse}
+        <tr>
+          <td colspan="3" align="center">
+            {t}No resolutions could be found.{/t}
+          </td>
+        </tr>
+        {/section}
+        <tr class="buttons">
+          <td width="4">
+            <input type="button" value="{t}All{/t}" class="select_all">
+          </td>
+          <td colspan="2">
+            <input type="submit" value="{t}Delete{/t}">
+          </td>
+        </tr>
+    </table>
+    </form>
+{/block}

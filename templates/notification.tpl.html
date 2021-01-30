@@ -1,0 +1,148 @@
+{extends "base.tpl.html"}
+{block title}#{$issue_id} - Notification List{/block}
+
+{block "javascripts"}
+<script type="text/javascript">
+  $(function() {
+    $('.select_all').click(function () {
+      Eventum.toggleCheckAll('items[]')
+    });
+
+    $('#users').change(function() {
+      Eventum.getField('email').val($(this).val());
+    });
+
+  });
+
+  function validateForm(f)
+  {
+    if (Validation.isFieldWhitespace('email')) {
+      alert('{t escape=js}Please enter a valid email address.{/t}');
+      Validation.selectField('email');
+      return false;
+    }
+  }
+
+  function checkDelete(f)
+  {
+    if (!Validation.hasOneChecked('items[]')) {
+      alert('{t escape=js}Please select at least one of the subscribers.{/t}');
+      return false;
+    }
+    if (!confirm('{t escape=js}This action will remove the selected entries.{/t}')) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+</script>
+{/block}
+
+{block "content"}
+<form name="notification_form" class="validate" method="post" data-validation-function="validateForm">
+<table class="bordered">
+    {if $smarty.get.cat|default:'' == 'edit'}
+      <input type="hidden" name="cat" value="update">
+      <input type="hidden" name="id" value="{$smarty.get.id|intval}">
+    {else}
+      <input type="hidden" name="cat" value="insert">
+    {/if}
+
+    <input type="hidden" name="issue_id" value="{$issue_id}">
+
+    {if $core.current_role > $core.roles.reporter}
+    <tr class="title">
+      <th colspan="2">
+        {t issue_id=$issue_id}Notification Options for Issue #%1{/t}
+      </th>
+    </tr>
+    <tr>
+      <th width="120">
+        {t}Email{/t}
+      </th>
+
+      <td nowrap>
+        <select id="users"
+                data-placeholder="{t}Choose User…{/t}" class="chosen-select">
+          {html_options options=$users }
+        </select><br/>
+
+        <input type="text" name="email" size="40" value="{if $info.sub_email|default:'' != ''}{$info.sub_email}{else}{$core.user.usr_email}{/if}">
+        {include file="error_icon.tpl.html" field="email"}
+      </td>
+
+    </tr>
+    <tr>
+      <th width="120">
+        {t}Get a Notification When{/t}
+      </th>
+      <td>
+        <input type="checkbox" name="actions[]" {if $info.emails|default:0}checked{/if} value="emails"> <a id="link" href="javascript:void(null);" onClick="toggleCheckbox('notification_form', 'actions[]', 0);">{t}Emails are Received or Sent{/t}</a><br />
+        <input type="checkbox" name="actions[]" {if $info.updated|default:0}checked{/if} value="updated"> <a id="link" href="javascript:void(null);" onClick="toggleCheckbox('notification_form', 'actions[]', 1);">{t}Overview or Details are Changed{/t}</a><br />
+        <input type="checkbox" name="actions[]" {if $info.closed|default:0}checked{/if} value="closed"> <a id="link" href="javascript:void(null);" onClick="toggleCheckbox('notification_form', 'actions[]', 2);">{t}Issue is Closed{/t}</a><br />
+        <input type="checkbox" name="actions[]" {if $info.files|default:0}checked{/if} value="files"> <a id="link" href="javascript:void(null);" onClick="toggleCheckbox('notification_form', 'actions[]', 3);">{t}Files are Attached{/t}</a>
+      </td>
+    </tr>
+    <tr class="buttons">
+      <td colspan="2">
+        {if $smarty.get.cat|default:'' == 'edit'}
+        <input type="submit" value="{t}Update Subscription{/t}">
+        {else}
+        <input type="submit" value="{t}Add Subscription{/t}">
+        {/if}
+        <input type="reset" value="{t}Reset{/t}">
+      </td>
+    </tr>
+    {/if}
+</table>
+</form>
+
+<form onSubmit="return checkDelete(this);" method="post">
+<input type="hidden" name="cat" value="delete">
+<input type="hidden" name="issue_id" value="{$issue_id}">
+<table class="bordered grid">
+    <tr class="title">
+      <th colspan="2">
+        {t}Existing Subscribers for this Issue{/t}
+      </th>
+    </tr>
+          <tr>
+          {if $list|@count > 0}
+            <th width="5"><input type="button" value="{t}All{/t}" class="select_all"></th>
+          {else}
+            <th nowrap>&nbsp;</th>
+          {/if}
+            <th>{t}Email{/t} ({t}click to edit{/t})</th>
+            <th>{t}Actions{/t}</th>
+          </tr>
+          {section name="i" loop=$list}
+          <tr class="{cycle values='odd,even'}">
+            <td width="4" nowrap><input type="checkbox" name="items[]" value="{$list[i].sub_id}"></td>
+            <td width="60%">
+              <a href="{$core.rel_url}notification.php?cat=edit&iss_id={$list[i].sub_iss_id}&id={$list[i].sub_id}" title="{t}update this entry{/t}">{$list[i].sub_email|escape:"html"}</a>
+              {if $list[i].sub_usr_id && !$list[i].sub_usr_status_active}
+                <i class="user-status">({$list[i].sub_usr_status})</i>
+              {/if}
+            </td>
+            <td width="40%">
+              {$list[i].actions}
+            </td>
+          </tr>
+          {sectionelse}
+          <tr class="no_results">
+            <td colspan="3">
+              {t}No subscribers could be found.{/t}
+            </td>
+          </tr>
+          {/section}
+          {if $core.current_role > $core.roles.reporter}
+          <tr class="buttons">
+            <td colspan="3">
+              <input type="submit" value="{t}Remove Selected{/t}">
+              <input type="button" value="{t}Close{/t}" onClick="Eventum.close_and_refresh();">
+            </td>
+          </tr>
+          {/if}
+  </table>
+  </form>
+{/block}

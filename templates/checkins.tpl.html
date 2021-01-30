@@ -1,0 +1,80 @@
+
+<script type="text/javascript">
+function removeCheckins(f)
+{
+    if (!hasOneChecked(f, 'item[]')) {
+        alert('{t escape=js}Please choose which entries need to be removed.{/t}');
+        return false;
+    }
+    if (!confirm('{t escape=js}This action will permanently delete the selected entries.{/t}')) {
+        return false;
+    } else {
+        var features = 'width=420,height=200,top=30,left=30,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+        var popupWin = window.open('', '_removeCheckins', features);
+        popupWin.focus();
+        return true;
+    }
+}
+
+/**
+ * jQuery code that takes <table class=scrollTable> and makes it scrollable if content is over height of 300px
+ * or defined data-max-height html5 attribute.
+ * The scroll is added only if data-limit-rows html attribute is exceeded,
+ * which defaults to 20 if undefined
+ */
+$(function() {
+  var $table = $('table.scrollTable');
+
+  // do this only if there are over 20 entries
+  if ($table.find('tbody>tr').length < ($table.data('limit-rows') || 20)) {
+    return;
+  }
+
+  // copy with into css
+  $('table.scrollTable thead th, table.scrollTable tfoot th, table.scrollTable tbody tr:first-child td').each(function(){
+    $(this).width($(this).width())
+  });
+
+  var $parent = $($table).parent();
+  var html = $parent.html();
+  var max_height = $table.data('max-height') || 300;
+  $(html).appendTo($parent);
+  $(html).appendTo($parent);
+
+  // refetch $table
+  $table = $('table.scrollTable');
+  $table.eq(0).find('tbody').remove();
+  $table.eq(0).find('tfoot').remove();
+  $table.wrap('<div style="overflow:auto; height:100%; max-height:' + max_height + 'px;">').eq(1).find('thead').remove();
+  $table.eq(1).find('tfoot').remove();
+  $table.eq(2).find('tbody').remove();
+  $table.eq(2).find('thead').remove();
+
+  // scroll content to bottom
+  var $scroll_el = $table.eq(1);
+  $scroll_el.parent('div').scrollTop($scroll_el.parent('div').scrollTop() + $scroll_el.height());
+});
+</script>
+
+<form onSubmit="return removeCheckins(this);" target="_removeCheckins" action="popup.php" method="post">
+<input type="hidden" name="cat" value="remove_checkin">
+<div class="issue_section bordered internal" id="checkins">
+    <div class="title">
+        {t 1=$checkins|count}SCM Integration - Checkins (%1){/t}
+        <span class="menu">
+            [ <a href="#top">{t}Back to Top{/t}</a> ]
+            [ <span class="js_link" id="toggle_checkins">{get_display_label element_name="checkins" total=$checkins|@count}</span> ]
+        </span>
+    </div>
+
+    {if $checkins}
+      {include file="checkins_list.tpl.html" checkins=$checkins}
+    {/if}
+
+    <div class="buttons">
+      <input type="button" value="{t}All{/t}" onClick="toggleSelectAll(this.form, 'item[]');">
+      <input type="submit" value="{t}Remove Selected{/t}">
+    </div>
+</div>
+</form>
+

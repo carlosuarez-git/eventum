@@ -1,0 +1,275 @@
+{extends "base.tpl.html"}
+{block "title"}{$extra_title}{/block}
+
+{block "content"}
+
+<script type="text/javascript">
+<!--
+window.name = '_email' + {$email.sup_id}
+var issue_id = '{$issue_id}';
+var ema_id = '{$email.sup_ema_id}';
+var sup_id = '{$email.sup_id}';
+
+function reply(ema_id, id)
+{
+    if (issue_id != '') {
+        window.location.href = 'send.php?issue_id=' + issue_id + '&ema_id=' + ema_id + '&id=' + id;
+    } else {
+        window.location.href = 'send.php?ema_id=' + ema_id + '&id=' + id;
+    }
+}
+function replyAsNote(account_id, email_id)
+{
+    window.location.href = 'post_note.php?cat=email_reply&issue_id=' + issue_id + '&ema_id=' + account_id + '&id=' + email_id, '_noteReply' + email_id;
+}
+function loadReport(id)
+{
+
+    document.writeln('<link rel="stylesheet" href="{$core.rel_url}css/main.css" type="text/css">');
+    document.writeln('<span>Please wait a few moments.</span><br />');
+    document.writeln('<br /><span>{t}Re-directing the parent window to the issue report page. This window will be closed automatically.{/t}</span>');
+    window.opener.location.href = 'new.php?cat=associate&item[]=' + id;
+    window.setTimeout('window.close()', 2000);
+
+}
+function associate(f)
+{
+    var field = getFormElement(f, 'issue');
+    if (field.options[field.selectedIndex].value == 'new') {
+
+        loadReport({$smarty.get.id|intval});
+
+    } else {
+        var hidden_field = getFormElement(f, 'issue');
+        hidden_field.value = field.options[field.selectedIndex].value;
+        f.submit();
+    }
+}
+function openRawHeaders()
+{
+
+    var features = 'width=740,height=580,top=60,left=60,resizable=yes,scrollbars=yes,toolbar=no,location=no,menubar=no,status=no';
+    var headersWin = window.open('view_headers.php?id={$smarty.get.id|intval}', '_headers', features);
+    headersWin.focus();
+
+}
+function viewEmail(ema_id, id)
+{
+
+{if $smarty.get.cat|default:'' == 'list_emails'}
+    window.location.href = 'view_email.php?cat=list_emails&ema_id=' + ema_id + '&id=' + id;
+{else}
+    window.location.href = 'view_email.php?issue_id=' + issue_id + '&ema_id=' + ema_id + '&id=' + id;
+{/if}
+
+}
+function moveMessage()
+{
+    var f = document.forms[0];
+
+    var new_ema_id = f.new_ema_id.value;
+
+    if (new_ema_id == ema_id) {
+        alert('{t escape=js}This message already belongs to that account{/t}');
+        return false;
+    }
+
+    window.location = 'view_email.php?cat=move_email&id=' + sup_id + '&ema_id=' + ema_id + '&new_ema_id=' + new_ema_id;
+}
+
+$().ready(function(e) {
+    $('.display_fixed_width').click(function() { Eventum.displayFixedWidth($('#email_message')); });
+});
+//-->
+</script>
+
+{if $move_email_result|default:'' != ''}
+<br />
+<center>
+  <span>
+    {if $move_email_result == -1}
+      {t}An error occurred while trying to run your query{/t}
+    {else}
+      {t}Thank you, the email was successfully moved.{/t}
+    {/if}
+  </span>
+</center>
+<script type="text/javascript">
+<!--
+{if $core.current_user_prefs.close_popup_windows}
+setTimeout('Eventum.close_and_refresh()', 2000);
+{/if}
+//-->
+</script>
+<br />
+{if not $core.current_user_prefs.close_popup_windows}
+<center>
+  <span><a href="javascript:void(null);" onClick="Eventum.close_and_refresh();">{t}Continue{/t}</a></span>
+</center>
+{/if}
+{else}
+<form method="post" action="popup.php" name="view_email">
+<input type="hidden" name="cat" value="associate">
+<input type="hidden" name="item[]" value="{$smarty.get.id|intval}">
+      <table class="bordered">
+        <tr class="title">
+          <th colspan="2">
+            {t}View Email Details{/t}{if $issue_id} ({t}Associated with Issue{/t} <a href="view.php?id={$issue_id}">#{$issue_id}</a>){/if}
+          </th>
+        </tr>
+        {if $next.sup_id != "" || $previous.sup_id != ""}
+        <tr class="buttons">
+          <td colspan="2" align="center">
+            <table border="0" width="100%" cellspacing="0" cellpadding="1">
+              <tr>
+                <td>
+                  {if $previous.sup_id != ""}
+                  <input type="button" value="&lt;&lt; {t}Previous Message{/t}" onClick="viewEmail({$previous.ema_id}, {$previous.sup_id});">
+                  {/if}
+                </td>
+                <td align="right">
+                  {if $next.sup_id != ""}
+                  <input type="button" value="{t}Next Message{/t} &gt;&gt;" onClick="viewEmail({$next.ema_id}, {$next.sup_id});">
+                  {/if}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {/if}
+        <tr>
+          <th width="120">
+            {t}Received{/t}:
+          </th>
+          <td>
+            {$email.sup_date|timeago}
+          </td>
+        </tr>
+        <tr>
+          <th width="120">
+            {t}From{/t}:
+          </th>
+          <td>
+            {$email.sup_from|escape:"html"}
+          </td>
+        </tr>
+        <tr>
+          <th width="120">
+            {t}To{/t}:
+          </th>
+          <td>
+            {if $email.sup_to == ""}
+            <i>{t}sent to notification list{/t}</i>
+            {else}
+            {$email.sup_to|escape:"html"}
+            {/if}
+          </td>
+        </tr>
+        {if $role|default:'' != $core.roles.customer && $recipients|@count > 0}
+        <tr>
+          <th width="120">
+            {t}Recipients{/t}:
+          </th>
+          <td>
+            {strip}
+            {section name="i" loop=$recipients}
+              {if not $smarty.section.i.first}, {/if}
+              {$recipients[i]|escape:"html"}
+            {/section}
+            {/strip}
+          </td>
+        </tr>
+        {/if}
+        <tr>
+          <th width="120">
+            {t}Cc{/t}:
+          </th>
+          <td>
+            {$email.sup_cc|escape:"html"}
+          </td>
+        </tr>
+        <tr>
+          <th width="120">
+            {t}Subject{/t}:
+          </th>
+          <td>
+            {$email.sup_subject|escape:"html"}
+          </td>
+        </tr>
+        {if $email.attachments}
+        <tr>
+          <th width="120">
+            {t}Attachments{/t}:
+          </th>
+          <td >
+            {section name="i" loop=$email.attachments}
+            <i class="fa fa-paperclip" aria-hidden="true"></i>
+            <a title="{t}download file{/t}" href="get_attachment.php?sup_id={$email.sup_id}&filename={$email.attachments[i].filename|escape:"url"}{if $email.attachments[i].cid}&cid={$email.attachments[i].cid|escape:"html"}{/if}">{$email.attachments[i].filename}</a><br />
+            {/section}
+          </td>
+        </tr>
+        {/if}
+        <tr class="buttons">
+          <td colspan="2">
+            <table width="100%">
+              <tr>
+                <td>
+                  <span>{t}Message{/t}:</span>
+                  <span>(<a class="js_link display_fixed_width">{t}display in fixed width font{/t}</a>)</span>
+                </td>
+                <td align="right">
+                  <a href="get_attachment.php?sup_id={$email.sup_id}&raw=1">{t}Download Raw Email{/t}</a>
+                  <a href="javascript:void(null);" onClick="openRawHeaders();">{t}Raw Headers{/t}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" id="email_message">
+{$email.seb_body|format_email}
+          </td>
+        </tr>
+        <tr class="buttons">
+          <td colspan="2">
+            <input type="button" value="{t}Reply{/t}" onClick="reply({$smarty.get.ema_id}, {$smarty.get.id|intval});">
+            {if $core.current_role > $core.roles.customer}
+                <input type="button" value="Reply as Note" onClick="replyAsNote({$smarty.get.ema_id}, {$smarty.get.id});">
+            {/if}
+            <input type="button" value="{t}Close{/t}" onClick="window.close();">
+          </td>
+        </tr>
+        {if $next.sup_id != "" || $previous.sup_id != ""}
+        <tr class="buttons">
+          <td colspan="2" align="center">
+            <table border="0" width="100%" cellspacing="0" cellpadding="1">
+              <tr>
+                <td>
+                  {if $previous.sup_id != ""}
+                  <input type="button" value="&lt;&lt; {t}Previous Message{/t}" onClick="viewEmail({$previous.ema_id}, {$previous.sup_id});">
+                  {/if}
+                </td>
+                <td align="right">
+                  {if $next.sup_id != ""}
+                  <input type="button" value="{t}Next Message{/t} &gt;&gt;" onClick="viewEmail({$next.ema_id}, {$next.sup_id});">
+                  {/if}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {/if}
+        {if $core.current_role > $core.roles.standard_user && $email.sup_iss_id == 0 && $email_accounts|@count > 1}
+        <tr>
+          <td colspan="2" align="center">
+            <input type="button" name="move_message" value="{t}Move Message To{/t}" onClick="moveMessage()">
+            <select name="new_ema_id" class="shortcut">
+            {html_options options=$email_accounts selected=$email.sup_ema_id}
+            </select>
+          </td>
+        </tr>
+        {/if}
+      </table>
+</form>
+{/if}
+{/block}
